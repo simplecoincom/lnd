@@ -40,6 +40,7 @@ GOFUZZ_COMMIT := 21309f307f61
 
 DEPGET := cd /tmp && GO111MODULE=on go get -v
 GOBUILD := GO111MODULE=on go build -v
+GOBUILDWASM := GO111MODULE=on GOOS=js GOARCH=wasm go build -v
 GOINSTALL := GO111MODULE=on go install -v
 GOTEST := GO111MODULE=on go test 
 
@@ -131,6 +132,10 @@ build:
 	@$(call print, "Building debug lnd and lncli.")
 	$(GOBUILD) -tags="$(DEV_TAGS)" -o lnd-debug $(DEV_LDFLAGS) $(PKG)/cmd/lnd
 	$(GOBUILD) -tags="$(DEV_TAGS)" -o lncli-debug $(DEV_LDFLAGS) $(PKG)/cmd/lncli
+
+build-wasm:
+	@$(call print, "Building debug lnd wasm")
+	$(GOBUILDWASM) -tags="$(DEV_TAGS)" -o lnd-debug.wasm $(DEV_LDFLAGS) $(PKG)/cmd/lnd
 
 build-itest:
 	@$(call print, "Building itest btcd and lnd.")
