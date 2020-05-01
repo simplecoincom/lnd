@@ -8,9 +8,6 @@ package signal
 import (
 	"errors"
 	"os"
-	"os/signal"
-	"sync/atomic"
-	"syscall"
 )
 
 var (
@@ -34,32 +31,6 @@ type Interceptor struct {
 
 	// quit is closed when instructing the main interrupt handler to exit.
 	quit chan struct{}
-}
-
-// Intercept starts the interception of interrupt signals and returns an `Interceptor` instance.
-// Note that any previous active interceptor must be stopped before a new one can be created
-func Intercept() (Interceptor, error) {
-	if !atomic.CompareAndSwapInt32(&started, 0, 1) {
-		return Interceptor{}, errors.New("intercept already started")
-	}
-
-	channels := Interceptor{
-		interruptChannel:       make(chan os.Signal, 1),
-		shutdownChannel:        make(chan struct{}),
-		shutdownRequestChannel: make(chan struct{}),
-		quit:                   make(chan struct{}),
-	}
-
-	signalsToCatch := []os.Signal{
-		os.Interrupt,
-		os.Kill,
-		syscall.SIGTERM,
-		syscall.SIGQUIT,
-	}
-	signal.Notify(channels.interruptChannel, signalsToCatch...)
-	go channels.mainInterruptHandler()
-
-	return channels, nil
 }
 
 // mainInterruptHandler listens for SIGINT (Ctrl+C) signals on the
