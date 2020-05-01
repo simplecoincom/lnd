@@ -8,9 +8,6 @@ package signal
 import (
 	"errors"
 	"os"
-	"os/signal"
-	"sync/atomic"
-	"syscall"
 )
 
 var (
@@ -31,25 +28,6 @@ var (
 	// shutdownChannel is closed once the main interrupt handler exits.
 	shutdownChannel = make(chan struct{})
 )
-
-// Intercept starts the interception of interrupt signals. Note that this
-// function can only be called once.
-func Intercept() error {
-	if !atomic.CompareAndSwapInt32(&started, 0, 1) {
-		return errors.New("intercept already started")
-	}
-
-	signalsToCatch := []os.Signal{
-		os.Interrupt,
-		os.Kill,
-		syscall.SIGTERM,
-		syscall.SIGQUIT,
-	}
-	signal.Notify(interruptChannel, signalsToCatch...)
-	go mainInterruptHandler()
-
-	return nil
-}
 
 // mainInterruptHandler listens for SIGINT (Ctrl+C) signals on the
 // interruptChannel and shutdown requests on the shutdownRequestChannel, and
