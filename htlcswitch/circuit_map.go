@@ -624,7 +624,8 @@ func (cm *circuitMap) CommitCircuits(circuits ...*PaymentCircuit) (
 
 	// Write the entire batch of circuits to the persistent circuit bucket
 	// using bolt's Batch write. This method must be called from multiple,
-	// distinct goroutines to have any impact on performance.
+	// distinct goroutines to have any impact on performance. The batch
+	// write works just like update when using LDB.
 	err := kvdb.Batch(cm.cfg.DB.Backend, func(tx kvdb.RwTx) error {
 		circuitBkt := tx.ReadWriteBucket(circuitAddKey)
 		if circuitBkt == nil {

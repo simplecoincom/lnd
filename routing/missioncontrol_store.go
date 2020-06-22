@@ -28,7 +28,7 @@ const (
 	unknownFailureSourceIdx = -1
 )
 
-// missionControlStore is a bolt db based implementation of a mission control
+// missionControlStore is a leveldb based implementation of a mission control
 // store. It stores the raw payment attempt data from which the internal mission
 // controls state can be rederived on startup. This allows the mission control
 // internal data structure to be changed without requiring a database migration.

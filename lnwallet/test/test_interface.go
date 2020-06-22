@@ -29,7 +29,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcwallet/chain"
 	"github.com/btcsuite/btcwallet/walletdb"
-	_ "github.com/btcsuite/btcwallet/walletdb/bdb"
+	_ "github.com/btcsuite/btcwallet/walletdb/ldb"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/lightninglabs/neutrino"
 	"github.com/lightningnetwork/lnd/blockcache"
@@ -3295,7 +3295,7 @@ func runTests(t *testing.T, walletDriver *lnwallet.WalletDriver,
 			// Start Alice - open a database, start a neutrino
 			// instance, and initialize a btcwallet driver for it.
 			aliceDB, err := walletdb.Create(
-				"bdb", tempTestDirAlice+"/neutrino.db", true,
+				"ldb", tempTestDirAlice+"/neutrino.db", true,
 				kvdb.DefaultDBTimeout,
 			)
 			if err != nil {
@@ -3324,7 +3324,7 @@ func runTests(t *testing.T, walletDriver *lnwallet.WalletDriver,
 			// Start Bob - open a database, start a neutrino
 			// instance, and initialize a btcwallet driver for it.
 			bobDB, err := walletdb.Create(
-				"bdb", tempTestDirBob+"/neutrino.db", true,
+				"ldb", tempTestDirBob+"/neutrino.db", true,
 				kvdb.DefaultDBTimeout,
 			)
 			if err != nil {

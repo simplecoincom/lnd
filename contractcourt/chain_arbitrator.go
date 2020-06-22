@@ -358,7 +358,7 @@ func newActiveChannelArbitrator(channel *channeldb.OpenChannel,
 	//
 	// TODO(roasbeef); abstraction leak...
 	//  * rework: adaptor method to set log scope w/ factory func
-	chanLog, err := newBoltArbitratorLog(
+	chanLog, err := newLdbArbitratorLog(
 		c.chanSource.Backend, arbCfg, c.cfg.ChainHash, chanPoint,
 	)
 	if err != nil {
@@ -559,7 +559,7 @@ func (c *ChainArbitrator) Start() error {
 				)
 			},
 		}
-		chanLog, err := newBoltArbitratorLog(
+		chanLog, err := newLdbArbitratorLog(
 			c.chanSource.Backend, arbCfg, c.cfg.ChainHash, chanPoint,
 		)
 		if err != nil {

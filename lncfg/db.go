@@ -13,6 +13,7 @@ const (
 	dbName                     = "channel.db"
 	BoltBackend                = "bolt"
 	EtcdBackend                = "etcd"
+	LdbBackend                 = "leveldb"
 	DefaultBatchCommitInterval = 500 * time.Millisecond
 )
 
@@ -25,16 +26,15 @@ type DB struct {
 	Etcd *etcd.Config `group:"etcd" namespace:"etcd" description:"Etcd settings."`
 
 	Bolt *kvdb.BoltConfig `group:"bolt" namespace:"bolt" description:"Bolt settings."`
+
+	LevelDB *kvdb.LdbConfig `group:"leveldb" namespace:"leveldb" description:"LevelDB settings."`
 }
 
 // NewDB creates and returns a new default DB config.
 func DefaultDB() *DB {
 	return &DB{
-		Backend:             BoltBackend,
-		BatchCommitInterval: DefaultBatchCommitInterval,
-		Bolt: &kvdb.BoltConfig{
-			AutoCompactMinAge: kvdb.DefaultBoltAutoCompactMinAge,
-			DBTimeout:         kvdb.DefaultDBTimeout,
+		Backend: ldbBackend,
+		LevelDB: &kvdb.LdbConfig{
 		},
 	}
 }
@@ -43,6 +43,8 @@ func DefaultDB() *DB {
 func (db *DB) Validate() error {
 	switch db.Backend {
 	case BoltBackend:
+
+	case ldbBackend:
 
 	case EtcdBackend:
 		if !db.Etcd.Embedded && db.Etcd.Host == "" {
@@ -112,14 +114,7 @@ func (db *DB) GetBackends(ctx context.Context, dbPath string) (
 		}
 	}
 
-	localDB, err = kvdb.GetBoltBackend(&kvdb.BoltBackendConfig{
-		DBPath:            dbPath,
-		DBFileName:        dbName,
-		DBTimeout:         db.Bolt.DBTimeout,
-		NoFreelistSync:    !db.Bolt.SyncFreelist,
-		AutoCompact:       db.Bolt.AutoCompact,
-		AutoCompactMinAge: db.Bolt.AutoCompactMinAge,
-	})
+	localDB, err = kvdb.GetLdbBackend(dbPath, dbName)
 	if err != nil {
 		return nil, err
 	}

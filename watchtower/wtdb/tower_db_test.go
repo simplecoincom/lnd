@@ -635,7 +635,7 @@ func TestTowerDB(t *testing.T) {
 		init dbInit
 	}{
 		{
-			name: "fresh boltdb",
+			name: "fresh leveldb",
 			init: func(t *testing.T) (watchtower.DB, func()) {
 				path, err := ioutil.TempDir("", "towerdb")
 				if err != nil {
@@ -660,7 +660,7 @@ func TestTowerDB(t *testing.T) {
 			},
 		},
 		{
-			name: "reopened boltdb",
+			name: "reopened leveldb",
 			init: func(t *testing.T) (watchtower.DB, func()) {
 				path, err := ioutil.TempDir("", "towerdb")
 				if err != nil {

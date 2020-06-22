@@ -2,7 +2,7 @@ package kvdb
 
 import (
 	"github.com/btcsuite/btcwallet/walletdb"
-	_ "github.com/btcsuite/btcwallet/walletdb/bdb" // Import to register backend.
+	_ "github.com/btcsuite/btcwallet/walletdb/ldb" // Import to register backend.
 )
 
 // Update opens a database read/write transaction and executes the function f

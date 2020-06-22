@@ -41,7 +41,7 @@ func openTestStore(t *testing.T, tempDir string) (func(),
 	*macaroons.RootKeyStorage) {
 
 	db, err := kvdb.Create(
-		kvdb.BoltBackendName, path.Join(tempDir, "weks.db"), true,
+		kvdb.LdbBackendName, path.Join(tempDir, "weks.db"), true,
 		kvdb.DefaultDBTimeout,
 	)
 	require.NoError(t, err)

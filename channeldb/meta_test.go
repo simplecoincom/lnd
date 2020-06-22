@@ -494,8 +494,10 @@ func TestMigrationDryRun(t *testing.T) {
 			return nil
 		}, func() {})
 		if err != nil {
-			t.Fatalf("unable to apply after func: %v", err)
+			t.Fatal(err)
 		}
+
+		return
 	}
 
 	applyMigration(t,

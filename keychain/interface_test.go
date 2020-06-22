@@ -17,7 +17,7 @@ import (
 	"github.com/btcsuite/btcwallet/walletdb"
 	"github.com/davecgh/go-spew/spew"
 
-	_ "github.com/btcsuite/btcwallet/walletdb/bdb" // Required in order to create the default database.
+	_ "github.com/btcsuite/btcwallet/walletdb/ldb" // Required in order to create the default database.
 )
 
 // versionZeroKeyFamilies is a slice of all the known key families for first
