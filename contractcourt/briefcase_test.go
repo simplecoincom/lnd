@@ -154,7 +154,7 @@ func makeTestDB() (kvdb.Backend, func(), error) {
 	}
 
 	db, err := kvdb.Create(
-		kvdb.BoltBackendName, tempDirName+"/test.db", true,
+		kvdb.LdbBackendName, tempDirName+"/test.db", true,
 		kvdb.DefaultDBTimeout,
 	)
 	if err != nil {
@@ -169,7 +169,7 @@ func makeTestDB() (kvdb.Backend, func(), error) {
 	return db, cleanUp, nil
 }
 
-func newTestBoltArbLog(chainhash chainhash.Hash,
+func newTestLdbArbLog(chainhash chainhash.Hash,
 	op wire.OutPoint) (ArbitratorLog, func(), error) {
 
 	testDB, cleanUp, err := makeTestDB()
@@ -183,7 +183,7 @@ func newTestBoltArbLog(chainhash chainhash.Hash,
 			return nil
 		},
 	}
-	testLog, err := newBoltArbitratorLog(testDB, testArbCfg, chainhash, op)
+	testLog, err := newLdbArbitratorLog(testDB, testArbCfg, chainhash, op)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -301,8 +301,8 @@ func TestContractInsertionRetrieval(t *testing.T) {
 	t.Parallel()
 
 	// First, we'll create a test instance of the ArbitratorLog
-	// implementation backed by boltdb.
-	testLog, cleanUp, err := newTestBoltArbLog(
+	// implementation backed by ldb.
+	testLog, cleanUp, err := newTestLdbArbLog(
 		testChainHash, testChanPoint1,
 	)
 	if err != nil {
@@ -437,8 +437,8 @@ func TestContractResolution(t *testing.T) {
 	t.Parallel()
 
 	// First, we'll create a test instance of the ArbitratorLog
-	// implementation backed by boltdb.
-	testLog, cleanUp, err := newTestBoltArbLog(
+	// implementation backed by ldb.
+	testLog, cleanUp, err := newTestLdbArbLog(
 		testChainHash, testChanPoint1,
 	)
 	if err != nil {
@@ -499,8 +499,8 @@ func TestContractSwapping(t *testing.T) {
 	t.Parallel()
 
 	// First, we'll create a test instance of the ArbitratorLog
-	// implementation backed by boltdb.
-	testLog, cleanUp, err := newTestBoltArbLog(
+	// implementation backed by ldb.
+	testLog, cleanUp, err := newTestLdbArbLog(
 		testChainHash, testChanPoint1,
 	)
 	if err != nil {
@@ -564,8 +564,8 @@ func TestContractResolutionsStorage(t *testing.T) {
 	t.Parallel()
 
 	// First, we'll create a test instance of the ArbitratorLog
-	// implementation backed by boltdb.
-	testLog, cleanUp, err := newTestBoltArbLog(
+	// implementation backed by ldb.
+	testLog, cleanUp, err := newTestLdbArbLog(
 		testChainHash, testChanPoint1,
 	)
 	if err != nil {
@@ -692,7 +692,7 @@ func TestContractResolutionsStorage(t *testing.T) {
 func TestStateMutation(t *testing.T) {
 	t.Parallel()
 
-	testLog, cleanUp, err := newTestBoltArbLog(
+	testLog, cleanUp, err := newTestLdbArbLog(
 		testChainHash, testChanPoint1,
 	)
 	if err != nil {
@@ -750,7 +750,7 @@ func TestScopeIsolation(t *testing.T) {
 
 	// We'll create two distinct test logs. Each log will have a unique
 	// scope key, and therefore should be isolated from the other on disk.
-	testLog1, cleanUp1, err := newTestBoltArbLog(
+	testLog1, cleanUp1, err := newTestLdbArbLog(
 		testChainHash, testChanPoint1,
 	)
 	if err != nil {
@@ -758,7 +758,7 @@ func TestScopeIsolation(t *testing.T) {
 	}
 	defer cleanUp1()
 
-	testLog2, cleanUp2, err := newTestBoltArbLog(
+	testLog2, cleanUp2, err := newTestLdbArbLog(
 		testChainHash, testChanPoint2,
 	)
 	if err != nil {
@@ -805,7 +805,7 @@ func TestScopeIsolation(t *testing.T) {
 func TestCommitSetStorage(t *testing.T) {
 	t.Parallel()
 
-	testLog, cleanUp, err := newTestBoltArbLog(
+	testLog, cleanUp, err := newTestLdbArbLog(
 		testChainHash, testChanPoint1,
 	)
 	if err != nil {

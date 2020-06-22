@@ -131,7 +131,7 @@ type ClientDB struct {
 // with a version number higher that the latest version will fail to prevent
 // accidental reversion.
 func OpenClientDB(dbPath string, dbTimeout time.Duration) (*ClientDB, error) {
-	bdb, firstInit, err := createDBIfNotExist(
+	ldb, firstInit, err := createDBIfNotExist(
 		dbPath, clientDBName, dbTimeout,
 	)
 	if err != nil {
@@ -139,13 +139,13 @@ func OpenClientDB(dbPath string, dbTimeout time.Duration) (*ClientDB, error) {
 	}
 
 	clientDB := &ClientDB{
-		db:     bdb,
+		db:     ldb,
 		dbPath: dbPath,
 	}
 
 	err = initOrSyncVersions(clientDB, firstInit, clientDBVersions)
 	if err != nil {
-		bdb.Close()
+		ldb.Close()
 		return nil, err
 	}
 
@@ -156,7 +156,7 @@ func OpenClientDB(dbPath string, dbTimeout time.Duration) (*ClientDB, error) {
 	// missing, this will trigger a ErrUninitializedDB error.
 	err = kvdb.Update(clientDB.db, initClientDBBuckets, func() {})
 	if err != nil {
-		bdb.Close()
+		ldb.Close()
 		return nil, err
 	}
 
@@ -184,10 +184,10 @@ func initClientDBBuckets(tx kvdb.RwTx) error {
 	return nil
 }
 
-// bdb returns the backing bbolt.DB instance.
+// ldb returns the backing leveldb instance.
 //
 // NOTE: Part of the versionedDB interface.
-func (c *ClientDB) bdb() kvdb.Backend {
+func (c *ClientDB) ldb() kvdb.Backend {
 	return c.db
 }
 

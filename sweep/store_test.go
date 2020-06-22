@@ -11,7 +11,7 @@ import (
 // TestStore asserts that the store persists the presented data to disk and is
 // able to retrieve it again.
 func TestStore(t *testing.T) {
-	t.Run("bolt", func(t *testing.T) {
+	t.Run("ldb", func(t *testing.T) {
 
 		// Create new store.
 		cdb, cleanUp, err := channeldb.MakeTestDB()

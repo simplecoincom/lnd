@@ -270,7 +270,7 @@ func NewNeutrinoBackend(t *testing.T, minerAddr string) (*neutrino.ChainService,
 
 	dbName := filepath.Join(spvDir, "neutrino.db")
 	spvDatabase, err := walletdb.Create(
-		"bdb", dbName, true, kvdb.DefaultDBTimeout,
+		"ldb", dbName, true, kvdb.DefaultDBTimeout,
 	)
 	if err != nil {
 		os.RemoveAll(spvDir)
