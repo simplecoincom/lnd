@@ -55,8 +55,8 @@ func Open(dbPath string, modifiers ...OptionModifier) (*DB, error) {
 
 	// Specify bbolt freelist options to reduce heap pressure in case the
 	// freelist grows to be very large.
-	bdb, err := kvdb.Open(
-		kvdb.BoltBackendName, path,
+	ldb, err := kvdb.Open(
+		kvdb.LdbBackendName, path,
 		opts.NoFreelistSync, opts.DBTimeout,
 	)
 	if err != nil {
@@ -64,7 +64,7 @@ func Open(dbPath string, modifiers ...OptionModifier) (*DB, error) {
 	}
 
 	chanDB := &DB{
-		Backend: bdb,
+		Backend: ldb,
 		dbPath:  dbPath,
 		now:     time.Now,
 	}
@@ -87,14 +87,14 @@ func createChannelDB(dbPath string) error {
 	}
 
 	path := filepath.Join(dbPath, dbName)
-	bdb, err := kvdb.Create(
-		kvdb.BoltBackendName, path, false, kvdb.DefaultDBTimeout,
+	ldb, err := kvdb.Create(
+		kvdb.LdbBackendName, path, false, kvdb.DefaultDBTimeout,
 	)
 	if err != nil {
 		return err
 	}
 
-	err = kvdb.Update(bdb, func(tx kvdb.RwTx) error {
+	err = kvdb.Update(ldb, func(tx kvdb.RwTx) error {
 		if _, err := tx.CreateTopLevelBucket(openChannelBucket); err != nil {
 			return err
 		}
@@ -162,7 +162,7 @@ func createChannelDB(dbPath string) error {
 		return fmt.Errorf("unable to create new channeldb")
 	}
 
-	return bdb.Close()
+	return ldb.Close()
 }
 
 // fileExists returns true if the file exists, and false otherwise.

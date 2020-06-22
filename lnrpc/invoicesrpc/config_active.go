@@ -44,7 +44,7 @@ type Config struct {
 	// specified.
 	DefaultCLTVExpiry uint32
 
-	// LocalChanDB is a global boltdb instance which is needed to access the
+	// LocalChanDB is a global leveldb instance which is needed to access the
 	// channel graph.
 	LocalChanDB *channeldb.DB
 

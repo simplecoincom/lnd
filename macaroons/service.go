@@ -69,7 +69,7 @@ type Service struct {
 	StatelessInit bool
 }
 
-// NewService returns a service backed by the macaroon Bolt DB stored in the
+// NewService returns a service backed by the macaroon LevelDB stored in the
 // passed directory. The `checks` argument can be any of the `Checker` type
 // functions defined in this package, or a custom checker if desired. This
 // constructor prevents double-registration of checkers to prevent panics, so
@@ -89,7 +89,7 @@ func NewService(dir, location string, statelessInit bool,
 	// Open the database that we'll use to store the primary macaroon key,
 	// and all generated macaroons+caveats.
 	macaroonDB, err := kvdb.Create(
-		kvdb.BoltBackendName, path.Join(dir, DBFilename), true,
+		kvdb.LdbBackendName, path.Join(dir, DBFilename), true,
 		dbTimeout,
 	)
 	if err != nil {

@@ -250,14 +250,7 @@ func Open(dbPath string, modifiers ...OptionModifier) (*DB, error) {
 		modifier(&opts)
 	}
 
-	backend, err := kvdb.GetBoltBackend(&kvdb.BoltBackendConfig{
-		DBPath:            dbPath,
-		DBFileName:        dbName,
-		NoFreelistSync:    opts.NoFreelistSync,
-		AutoCompact:       opts.AutoCompact,
-		AutoCompactMinAge: opts.AutoCompactMinAge,
-		DBTimeout:         opts.DBTimeout,
-	})
+	backend, err := kvdb.GetLdbBackend(dbPath, dbName)
 	if err != nil {
 		return nil, err
 	}
@@ -359,6 +352,7 @@ func initChannelDB(db kvdb.Backend) error {
 
 		for _, tlb := range topLevelBuckets {
 			if _, err := tx.CreateTopLevelBucket(tlb); err != nil {
+				fmt.Printf("weks1: %s\n", tlb)
 				return err
 			}
 		}
@@ -366,30 +360,37 @@ func initChannelDB(db kvdb.Backend) error {
 		nodes := tx.ReadWriteBucket(nodeBucket)
 		_, err = nodes.CreateBucket(aliasIndexBucket)
 		if err != nil {
+			fmt.Println("weks3")
 			return err
 		}
 		_, err = nodes.CreateBucket(nodeUpdateIndexBucket)
 		if err != nil {
+			fmt.Println("weks4")
 			return err
 		}
 
 		edges := tx.ReadWriteBucket(edgeBucket)
 		if _, err := edges.CreateBucket(edgeIndexBucket); err != nil {
+			fmt.Println("weks5")
 			return err
 		}
 		if _, err := edges.CreateBucket(edgeUpdateIndexBucket); err != nil {
+			fmt.Println("weks6")
 			return err
 		}
 		if _, err := edges.CreateBucket(channelPointBucket); err != nil {
+			fmt.Println("weks7")
 			return err
 		}
 		if _, err := edges.CreateBucket(zombieBucket); err != nil {
+			fmt.Println("weks8")
 			return err
 		}
 
 		graphMeta := tx.ReadWriteBucket(graphMetaBucket)
 		_, err = graphMeta.CreateBucket(pruneLogBucket)
 		if err != nil {
+			fmt.Println("weks9")
 			return err
 		}
 

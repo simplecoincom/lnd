@@ -23,6 +23,11 @@ const (
 	DefaultDBTimeout = time.Second * 60
 )
 
+// LdbBackendName is the name of the backend that should be passed into
+// kvdb.Create to initialize a new instance of kvdb.Backend backed by a live
+// instance of goleveldb.
+const LdbBackendName = "ldb"
+
 // BoltConfig holds bolt configuration.
 type BoltConfig struct {
 	SyncFreelist bool `long:"nofreelistsync" description:"Whether the databases used within lnd should sync their freelist to disk. This is disabled by default resulting in improved memory performance during operation, but with an increase in startup time."`
@@ -32,6 +37,10 @@ type BoltConfig struct {
 	AutoCompactMinAge time.Duration `long:"auto-compact-min-age" description:"How long ago the last compaction of a database file must be for it to be considered for auto compaction again. Can be set to 0 to compact on every startup."`
 
 	DBTimeout time.Duration `long:"dbtimeout" description:"Specify the timeout value used when opening the database."`
+}
+
+// LdbConfig holds goleveldb configuration.
+type LdbConfig struct {
 }
 
 // EtcdConfig holds etcd configuration.
