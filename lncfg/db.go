@@ -11,6 +11,7 @@ const (
 	dbName      = "channel.db"
 	boltBackend = "bolt"
 	etcdBackend = "etcd"
+	ldbBackend  = "leveldb"
 )
 
 // DB holds database configuration for LND.
@@ -20,14 +21,15 @@ type DB struct {
 	Etcd *kvdb.EtcdConfig `group:"etcd" namespace:"etcd" description:"Etcd settings."`
 
 	Bolt *kvdb.BoltConfig `group:"bolt" namespace:"bolt" description:"Bolt settings."`
+
+	LevelDB *kvdb.LdbConfig `group:"leveldb" namespace:"leveldb" description:"LevelDB settings."`
 }
 
 // NewDB creates and returns a new default DB config.
 func DefaultDB() *DB {
 	return &DB{
-		Backend: boltBackend,
-		Bolt: &kvdb.BoltConfig{
-			NoFreeListSync: true,
+		Backend: ldbBackend,
+		LevelDB: &kvdb.LdbConfig{
 		},
 	}
 }
@@ -36,6 +38,8 @@ func DefaultDB() *DB {
 func (db *DB) Validate() error {
 	switch db.Backend {
 	case boltBackend:
+
+	case ldbBackend:
 
 	case etcdBackend:
 		if db.Etcd.Host == "" {
@@ -59,7 +63,7 @@ func (db *DB) GetBackend(ctx context.Context, dbPath string,
 		return kvdb.GetEtcdBackend(ctx, networkName, db.Etcd)
 	}
 
-	return kvdb.GetBoltBackend(dbPath, dbName, db.Bolt.NoFreeListSync)
+	return kvdb.GetLdbBackend(dbPath, dbName)
 }
 
 // Compile-time constraint to ensure Workers implements the Validator interface.

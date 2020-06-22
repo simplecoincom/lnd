@@ -7,9 +7,9 @@ import (
 	"fmt"
 )
 
-// TestBackend is conditionally set to bdb when the kvdb_etcd build tag is
-// not defined, allowing testing our database code with bolt backend.
-const TestBackend = BoltBackendName
+// TestBackend is conditionally set to ldb when the kvdb_etcd build tag is
+// not defined, allowing testing our database code with leveldb backend.
+const TestBackend = LdbBackendName
 
 var errEtcdNotAvailable = fmt.Errorf("etcd backend not available")
 

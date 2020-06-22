@@ -481,21 +481,16 @@ func TestMigrationDryRun(t *testing.T) {
 
 	// Check that version of database version is not modified.
 	afterMigrationFunc := func(d *DB) {
-		err := kvdb.View(d, func(tx kvdb.RTx) error {
-			meta, err := d.FetchMeta(nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if meta.DbVersionNumber != 0 {
-				t.Fatal("dry run migration was not aborted")
-			}
-
-			return nil
-		})
+		meta, err := d.FetchMeta(nil)
 		if err != nil {
-			t.Fatalf("unable to apply after func: %v", err)
+			t.Fatal(err)
 		}
+
+		if meta.DbVersionNumber != 0 {
+			t.Fatal("dry run migration was not aborted")
+		}
+
+		return
 	}
 
 	applyMigration(t,

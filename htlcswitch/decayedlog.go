@@ -45,7 +45,7 @@ var (
 // HashPrefixSize bytes of a sha256-hashed shared secret along with a node's
 // CLTV value. It is a decaying log meaning there will be a garbage collector
 // to collect entries which are expired according to their stored CLTV value
-// and the current block height. DecayedLog wraps boltdb for simplicity and
+// and the current block height. DecayedLog wraps ldb for simplicity and
 // batches writes to the database to decrease write contention.
 type DecayedLog struct {
 	started int32 // To be used atomically.
@@ -87,13 +87,13 @@ func (d *DecayedLog) Start() error {
 		return nil
 	}
 
-	// Open the boltdb for use.
+	// Open the ldb for use.
 	var err error
 	d.db, err = kvdb.Create(
-		kvdb.BoltBackendName, d.dbPath, true,
+		kvdb.LdbBackendName, d.dbPath, true,
 	)
 	if err != nil {
-		return fmt.Errorf("could not open boltdb: %v", err)
+		return fmt.Errorf("could not open ldb: %v", err)
 	}
 
 	// Initialize the primary buckets used by the decayed log.
@@ -134,7 +134,7 @@ func (d *DecayedLog) initBuckets() error {
 	})
 }
 
-// Stop halts the garbage collector and closes boltdb.
+// Stop halts the garbage collector and closes ldb.
 func (d *DecayedLog) Stop() error {
 	if !atomic.CompareAndSwapInt32(&d.stopped, 0, 1) {
 		return nil
@@ -145,7 +145,7 @@ func (d *DecayedLog) Stop() error {
 
 	d.wg.Wait()
 
-	// Close boltdb.
+	// Close ldb.
 	d.db.Close()
 
 	return nil
@@ -325,7 +325,8 @@ func (d *DecayedLog) PutBatch(b *sphinx.Batch) (*sphinx.ReplaySet, error) {
 	// avoid any side-effects. If the txn is successful, this replay set
 	// will be merged with the replay set computed during batch construction
 	// to generate the complete replay set. If this batch was previously
-	// processed, the replay set will be deserialized from disk.
+	// processed, the replay set will be deserialized from disk. Leveldb
+	// batchs are processed as if they're plain updates.
 	var replays *sphinx.ReplaySet
 	if err := kvdb.Batch(d.db, func(tx kvdb.RwTx) error {
 		sharedHashes := tx.ReadWriteBucket(sharedHashBucket)

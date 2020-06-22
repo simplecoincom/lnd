@@ -18,7 +18,8 @@ var (
 	//
 	// Within the payments bucket, each invoice is keyed by its invoice ID
 	// which is a monotonically increasing uint64.  BoltDB's sequence
-	// feature is used for generating monotonically increasing id.
+	// feature, emulated in the walletdb LevelDB driver, is used for
+	// generating monotonically increasing id.
 	//
 	// NOTE: Deprecated. Kept around for migration purposes.
 	paymentBucket = []byte("payments")

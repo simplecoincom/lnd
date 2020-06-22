@@ -63,7 +63,7 @@ func createMcTestContext(t *testing.T) *mcTestContext {
 
 	ctx.dbPath = file.Name()
 
-	ctx.db, err = kvdb.Open(kvdb.BoltBackendName, ctx.dbPath, true)
+	ctx.db, err = kvdb.Open(kvdb.LdbBackendName, ctx.dbPath, true)
 	if err != nil {
 		t.Fatal(err)
 	}

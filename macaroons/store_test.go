@@ -22,7 +22,7 @@ func TestStore(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	db, err := kvdb.Create(
-		kvdb.BoltBackendName, path.Join(tempDir, "weks.db"), true,
+		kvdb.LdbBackendName, path.Join(tempDir, "weks.db"), true,
 	)
 	if err != nil {
 		t.Fatalf("Error opening store DB: %v", err)
@@ -78,7 +78,7 @@ func TestStore(t *testing.T) {
 	// a double-close, but that's not such a big deal since the tests will
 	// fail anyway in that case.
 	db, err = kvdb.Create(
-		kvdb.BoltBackendName, path.Join(tempDir, "weks.db"), true,
+		kvdb.LdbBackendName, path.Join(tempDir, "weks.db"), true,
 	)
 	if err != nil {
 		t.Fatalf("Error opening store DB: %v", err)

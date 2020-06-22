@@ -10,9 +10,18 @@ const BoltBackendName = "bdb"
 // instance of etcd.
 const EtcdBackendName = "etcd"
 
+// LdbBackendName is the name of the backend that should be passed into
+// kvdb.Create to initialize a new instance of kvdb.Backend backed by a live
+// instance of goleveldb.
+const LdbBackendName = "ldb"
+
 // BoltConfig holds bolt configuration.
 type BoltConfig struct {
 	NoFreeListSync bool `long:"nofreelistsync" description:"If true, prevents the database from syncing its freelist to disk"`
+}
+
+// LdbConfig holds goleveldb configuration.
+type LdbConfig struct {
 }
 
 // EtcdConfig holds etcd configuration.

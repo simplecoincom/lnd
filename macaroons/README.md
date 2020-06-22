@@ -8,7 +8,7 @@ For a more high-level overview see
 
 ## Root key
 
-At startup, if the option `--no-macaroons` is **not** used, a Bolt DB key/value
+At startup, if the option `--no-macaroons` is **not** used, a LevelDB key/value
 store named `data/macaroons.db` is created with a bucket named `macrootkeys`.
 In this DB the following two key/value pairs are stored:
 

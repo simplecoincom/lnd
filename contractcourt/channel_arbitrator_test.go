@@ -394,12 +394,12 @@ func createTestChannelArbitrator(t *testing.T, log ArbitratorLog,
 			return nil, err
 		}
 		dbPath := filepath.Join(dbDir, "testdb")
-		db, err := kvdb.Create(kvdb.BoltBackendName, dbPath, true)
+		db, err := kvdb.Create(kvdb.LdbBackendName, dbPath, true)
 		if err != nil {
 			return nil, err
 		}
 
-		backingLog, err := newBoltArbitratorLog(
+		backingLog, err := newLdbArbitratorLog(
 			db, *arbCfg, chainhash.Hash{}, chanPoint,
 		)
 		if err != nil {

@@ -44,7 +44,7 @@ type Config struct {
 	// specified.
 	DefaultCLTVExpiry uint32
 
-	// ChanDB is a global boltdb instance which is needed to access the
+	// ChanDB is a global leveldb instance which is needed to access the
 	// channel graph.
 	ChanDB *channeldb.DB
 

@@ -67,19 +67,19 @@ type TowerDB struct {
 // with a version number higher that the latest version will fail to prevent
 // accidental reversion.
 func OpenTowerDB(dbPath string) (*TowerDB, error) {
-	bdb, firstInit, err := createDBIfNotExist(dbPath, towerDBName)
+	ldb, firstInit, err := createDBIfNotExist(dbPath, towerDBName)
 	if err != nil {
 		return nil, err
 	}
 
 	towerDB := &TowerDB{
-		db:     bdb,
+		db:     ldb,
 		dbPath: dbPath,
 	}
 
 	err = initOrSyncVersions(towerDB, firstInit, towerDBVersions)
 	if err != nil {
-		bdb.Close()
+		ldb.Close()
 		return nil, err
 	}
 
@@ -90,7 +90,7 @@ func OpenTowerDB(dbPath string) (*TowerDB, error) {
 	// missing, this will trigger a ErrUninitializedDB error.
 	err = kvdb.Update(towerDB.db, initTowerDBBuckets)
 	if err != nil {
-		bdb.Close()
+		ldb.Close()
 		return nil, err
 	}
 
@@ -117,10 +117,10 @@ func initTowerDBBuckets(tx kvdb.RwTx) error {
 	return nil
 }
 
-// bdb returns the backing bbolt.DB instance.
+// ldb returns the backing leveldb instance.
 //
 // NOTE: Part of the versionedDB interface.
-func (t *TowerDB) bdb() kvdb.Backend {
+func (t *TowerDB) ldb() kvdb.Backend {
 	return t.db
 }
 

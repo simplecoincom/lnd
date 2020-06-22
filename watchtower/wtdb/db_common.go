@@ -45,7 +45,7 @@ func fileExists(path string) bool {
 	return true
 }
 
-// createDBIfNotExist opens the boltdb database at dbPath/name, creating one if
+// createDBIfNotExist opens the leveldb database at dbPath/name, creating one if
 // one doesn't exist. The boolean returned indicates if the database did not
 // exist before, or if it has been created but no version metadata exists within
 // it.
@@ -63,9 +63,7 @@ func createDBIfNotExist(dbPath, name string) (kvdb.Backend, bool, error) {
 		}
 	}
 
-	// Specify bbolt freelist options to reduce heap pressure in case the
-	// freelist grows to be very large.
-	bdb, err := kvdb.Create(kvdb.BoltBackendName, path, true)
+	ldb, err := kvdb.Create(kvdb.LdbBackendName, path)
 	if err != nil {
 		return nil, false, err
 	}
@@ -77,7 +75,7 @@ func createDBIfNotExist(dbPath, name string) (kvdb.Backend, bool, error) {
 	// set firstInit to true so that we can treat is initialize the bucket.
 	if !firstInit {
 		var metadataExists bool
-		err = kvdb.View(bdb, func(tx kvdb.RTx) error {
+		err = kvdb.View(ldb, func(tx kvdb.RTx) error {
 			metadataExists = tx.ReadBucket(metadataBkt) != nil
 			return nil
 		})
@@ -90,5 +88,5 @@ func createDBIfNotExist(dbPath, name string) (kvdb.Backend, bool, error) {
 		}
 	}
 
-	return bdb, firstInit, nil
+	return ldb, firstInit, nil
 }

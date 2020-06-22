@@ -31,7 +31,7 @@ func TestMissionControlStore(t *testing.T) {
 
 	dbPath := file.Name()
 
-	db, err := kvdb.Create(kvdb.BoltBackendName, dbPath, true)
+	db, err := kvdb.Create(kvdb.LdbBackendName, dbPath, true)
 	if err != nil {
 		t.Fatal(err)
 	}
