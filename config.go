@@ -349,7 +349,7 @@ func DefaultConfig() Config {
 			DNS:     defaultTorDNS,
 			Control: defaultTorControl,
 		},
-		net: &tor.ClearNet{},
+		net: NewWSNet(),
 		Workers: &lncfg.Workers{
 			Read:  lncfg.DefaultReadWorkers,
 			Write: lncfg.DefaultWriteWorkers,
@@ -565,12 +565,15 @@ func ValidateConfig(cfg Config, usageMessage string) (*Config, error) {
 			cfg.MaxChannelFeeAllocation)
 	}
 
+	// No direct Tor support for now in-browser
+	/*
 	// Validate the Tor config parameters.
 	socks, err := lncfg.ParseAddressString(
 		cfg.Tor.SOCKS, strconv.Itoa(defaultTorSOCKSPort),
 		cfg.net.ResolveTCPAddr,
 	)
 	if err != nil {
+	// Validate the Tor config parameters.
 		return nil, err
 	}
 	cfg.Tor.SOCKS = socks.String()
@@ -652,7 +655,7 @@ func ValidateConfig(cfg Config, usageMessage string) (*Config, error) {
 			StreamIsolation: cfg.Tor.StreamIsolation,
 		}
 	}
-
+	*/
 	if cfg.DisableListen && cfg.NAT {
 		return nil, errors.New("NAT traversal cannot be used when " +
 			"listening is disabled")
@@ -948,7 +951,7 @@ func ValidateConfig(cfg Config, usageMessage string) (*Config, error) {
 
 	// Initialize logging at the default logging level.
 	SetupLoggers(cfg.LogWriter)
-	err = cfg.LogWriter.InitLogRotator(
+	err := cfg.LogWriter.InitLogRotator(
 		filepath.Join(cfg.LogDir, defaultLogFilename),
 		cfg.MaxLogFileSize, cfg.MaxLogFiles,
 	)
@@ -970,10 +973,10 @@ func ValidateConfig(cfg Config, usageMessage string) (*Config, error) {
 
 	// At least one RPCListener is required. So listen on localhost per
 	// default.
-	if len(cfg.RawRPCListeners) == 0 {
+	/*if len(cfg.RawRPCListeners) == 0 {
 		addr := fmt.Sprintf("localhost:%d", defaultRPCPort)
 		cfg.RawRPCListeners = append(cfg.RawRPCListeners, addr)
-	}
+	}*/
 
 	// Listen on localhost if no REST listeners were specified.
 	if len(cfg.RawRESTListeners) == 0 {

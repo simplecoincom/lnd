@@ -144,7 +144,7 @@ func ParseAddressString(strAddress string, defaultPort string,
 	case "unix", "unixpacket":
 		return net.ResolveUnixAddr(parsedNetwork, parsedAddr)
 
-	case "tcp", "tcp4", "tcp6":
+	case "tcp", "tcp4", "tcp6", "ws", "wss", "http", "https":
 		return tcpResolver(
 			parsedNetwork, verifyPort(parsedAddr, defaultPort),
 		)
@@ -177,9 +177,9 @@ func ParseAddressString(strAddress string, defaultPort string,
 		// Otherwise, we'll attempt the resolve the host. The Tor
 		// resolver is unable to resolve local addresses, so we'll use
 		// the system resolver instead.
-		if rawHost == "" || IsLoopback(rawHost) {
+		/*if rawHost == "" || IsLoopback(rawHost) {
 			return net.ResolveTCPAddr("tcp", addrWithPort)
-		}
+		}*/
 
 		return tcpResolver("tcp", addrWithPort)
 	}

@@ -346,7 +346,8 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// RPCListeners defined in the config. It also returns a cleanup
 	// closure and the server options to use for the GRPC server.
 	getListeners := func() ([]*ListenerWithSignal, func(), error) {
-		var grpcListeners []*ListenerWithSignal
+		return []*ListenerWithSignal{}, func(){}, nil
+		/*var grpcListeners []*ListenerWithSignal
 		for _, grpcEndpoint := range cfg.RPCListeners {
 			// Start a gRPC server listening for HTTP/2
 			// connections.
@@ -368,7 +369,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 				lis.Close()
 			}
 		}
-		return grpcListeners, cleanup, nil
+		return grpcListeners, cleanup, nil*/
 	}
 
 	// walletUnlockerListeners is a closure we'll hand to the wallet
@@ -846,7 +847,7 @@ func getTLSConfig(cfg *Config) (*tls.Config, *credentials.TransportCredentials,
 		return nil, nil, "", err
 	}
 
-	restProxyDest := cfg.RPCListeners[0].String()
+	restProxyDest := "" /*cfg.RPCListeners[0].String()
 	switch {
 	case strings.Contains(restProxyDest, "0.0.0.0"):
 		restProxyDest = strings.Replace(
@@ -857,7 +858,7 @@ func getTLSConfig(cfg *Config) (*tls.Config, *credentials.TransportCredentials,
 		restProxyDest = strings.Replace(
 			restProxyDest, "[::]", "[::1]", 1,
 		)
-	}
+	}*/
 
 	return tlsCfg, &restCreds, restProxyDest, nil
 }
