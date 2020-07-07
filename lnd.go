@@ -282,7 +282,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// We use the first RPC listener as the destination for our REST proxy.
 	// If the listener is set to listen on all interfaces, we replace it
 	// with localhost, as we cannot dial it directly.
-	restProxyDest := cfg.RPCListeners[0].String()
+	restProxyDest := "" /*cfg.RPCListeners[0].String()
 	switch {
 	case strings.Contains(restProxyDest, "0.0.0.0"):
 		restProxyDest = strings.Replace(
@@ -293,7 +293,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 		restProxyDest = strings.Replace(
 			restProxyDest, "[::]", "[::1]", 1,
 		)
-	}
+	}*/
 
 	// Before starting the wallet, we'll create and start our Neutrino
 	// light client instance, if enabled, in order to allow it to sync
@@ -333,7 +333,8 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// RPCListeners defined in the config. It also returns a cleanup
 	// closure and the server options to use for the GRPC server.
 	getListeners := func() ([]*ListenerWithSignal, func(), error) {
-		var grpcListeners []*ListenerWithSignal
+		return []*ListenerWithSignal{}, func(){}, nil
+		/*var grpcListeners []*ListenerWithSignal
 		for _, grpcEndpoint := range cfg.RPCListeners {
 			// Start a gRPC server listening for HTTP/2
 			// connections.
@@ -355,7 +356,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 				lis.Close()
 			}
 		}
-		return grpcListeners, cleanup, nil
+		return grpcListeners, cleanup, nil*/
 	}
 
 	// walletUnlockerListeners is a closure we'll hand to the wallet
