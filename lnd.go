@@ -1373,7 +1373,7 @@ func startRestProxy(cfg *Config, rpcServer *rpcServer, restDialOpts []grpc.DialO
 	// We use the first RPC listener as the destination for our REST proxy.
 	// If the listener is set to listen on all interfaces, we replace it
 	// with localhost, as we cannot dial it directly.
-	restProxyDest := cfg.RPCListeners[0].String()
+	restProxyDest := "" /*cfg.RPCListeners[0].String()
 	switch {
 	case strings.Contains(restProxyDest, "0.0.0.0"):
 		restProxyDest = strings.Replace(
@@ -1385,6 +1385,7 @@ func startRestProxy(cfg *Config, rpcServer *rpcServer, restDialOpts []grpc.DialO
 			restProxyDest, "[::]", "[::1]", 1,
 		)
 	}
+	*/
 
 	var shutdownFuncs []func()
 	shutdown := func() {
