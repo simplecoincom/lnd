@@ -90,8 +90,8 @@ func NewMCListener(mc js.Value) (*MCListener, error) {
 	m := &MCListener{connect: make(chan js.Value)}
 	m.onMessage = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		go func() {
-			if len(args) > 0 {
-				m.connect <- args[0].Get("data")
+			if len(args) > 1 {
+				m.connect <- args[1]
 			}
 		}()
 		return nil
