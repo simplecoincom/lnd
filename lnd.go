@@ -16,6 +16,7 @@ import (
 	"runtime/pprof"
 	"strings"
 	"sync"
+	"syscall/js"
 	"time"
 
 	// Blank import to set up profiling HTTP handlers.
@@ -346,9 +347,8 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// RPCListeners defined in the config. It also returns a cleanup
 	// closure and the server options to use for the GRPC server.
 	getListeners := func() ([]*ListenerWithSignal, func(), error) {
-		return []*ListenerWithSignal{}, func(){}, nil
-		/*var grpcListeners []*ListenerWithSignal
-		for _, grpcEndpoint := range cfg.RPCListeners {
+		var grpcListeners []*ListenerWithSignal
+		/*for _, grpcEndpoint := range cfg.RPCListeners {
 			// Start a gRPC server listening for HTTP/2
 			// connections.
 			lis, err := lncfg.ListenOnAddress(grpcEndpoint)
@@ -362,14 +362,24 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 					Listener: lis,
 					Ready:    make(chan struct{}),
 				})
-		}
+		}*/
 
+		// TODO(aakselrod): fix this scoping
+		mc := js.Global().Call("getLndPipe")
+		lis, err := NewMCListener(mc)
+		if err != nil {
+			ltndLog.Errorf("unable to listen on js message channel")
+		}
+		grpcListeners = append(grpcListeners, &ListenerWithSignal{
+			Listener: lis,
+			Ready:    make(chan struct{}),
+		})
 		cleanup := func() {
 			for _, lis := range grpcListeners {
 				lis.Close()
 			}
 		}
-		return grpcListeners, cleanup, nil*/
+		return grpcListeners, cleanup, nil
 	}
 
 	// walletUnlockerListeners is a closure we'll hand to the wallet
