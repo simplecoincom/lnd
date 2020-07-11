@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall/js"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -298,7 +299,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 	// If we have chosen to start with a dedicated listener for the
 	// rpc server, we set it directly.
 	var grpcListeners []*ListenerWithSignal
-	if lisCfg.RPCListener != nil {
+	/*if lisCfg.RPCListener != nil {
 		grpcListeners = []*ListenerWithSignal{lisCfg.RPCListener}
 	} else {
 		// Otherwise we create listeners from the RPCListeners defined
@@ -320,7 +321,18 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 					Ready:    make(chan struct{}),
 				})
 		}
+	}*/
+
+	// TODO(aakselrod): fix this scoping
+	mc := js.Global().Call("getLndPipe")
+	lis, err := NewMCListener(mc)
+	if err != nil {
+		ltndLog.Errorf("unable to listen on js message channel")
 	}
+	grpcListeners = append(grpcListeners, &ListenerWithSignal{
+		Listener: lis,
+		Ready:    make(chan struct{}),
+	})
 
 	// Create a new RPC interceptor that we'll add to the GRPC server. This
 	// will be used to log the API calls invoked on the GRPC server.
