@@ -1189,6 +1189,21 @@ func getTLSConfig(cfg *Config) ([]grpc.ServerOption, []grpc.DialOption,
 	// Return a function closure that can be used to listen on a given
 	// address with the current TLS config.
 	restListen := func(addr net.Addr) (net.Listener, error) {
+		// Handle MessageChannel-based endpoints
+		if tcpAddr, ok := addr.(*net.TCPAddr); !ok || tcpAddr == nil || tcpAddr.IP == nil {
+			// TODO(aakselrod): fix scoping/function call
+			mc := js.Global().Call("getRESTPipe")
+			lis, err := NewMCListener(mc)
+			if err != nil {
+				ltndLog.Errorf("unable to listen on js message channel")
+				return nil, err
+			}
+			// Enable TLS if not disabled in config
+			if !cfg.DisableRestTLS {
+				lis = tls.NewListener(lis, tlsConf)
+			}
+			return lis, nil
+		}
 		// For restListen we will call ListenOnAddress if TLS is
 		// disabled.
 		if cfg.DisableRestTLS {
