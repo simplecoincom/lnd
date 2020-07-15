@@ -1046,13 +1046,25 @@ func waitForWalletPassword(cfg *Config, restEndpoints []net.Addr,
 	srv := &http.Server{Handler: mux}
 
 	for _, restEndpoint := range restEndpoints {
-		lis, err := lncfg.TLSListenOnAddress(restEndpoint, tlsConf)
-		if err != nil {
-			ltndLog.Errorf(
-				"password gRPC proxy unable to listen on %s",
-				restEndpoint,
-			)
-			return nil, err
+		var lis net.Listener
+		var err error
+		if addr, ok := restEndpoint.(*net.TCPAddr); !ok || addr == nil || addr.IP == nil {
+			// TODO(aakselrod): fix scoping/function call
+			mc := js.Global().Call("getRESTPipe")
+			lis, err = NewMCListener(mc)
+			if err != nil {
+				ltndLog.Errorf("unable to listen on js message channel")
+			}
+			lis = tls.NewListener(lis, tlsConf)
+		} else {
+			lis, err = lncfg.TLSListenOnAddress(restEndpoint, tlsConf)
+			if err != nil {
+				ltndLog.Errorf(
+					"password gRPC proxy unable to listen on %s",
+					restEndpoint,
+				)
+				return nil, err
+			}
 		}
 		defer lis.Close()
 
