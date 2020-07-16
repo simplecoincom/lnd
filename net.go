@@ -70,28 +70,32 @@ func (w *WSNet) LookupHost(host string) ([]string, error) {
 
 // LookupSRV does nothing for now
 func (w *WSNet) LookupSRV(service, proto, name string) (string, []*net.SRV, error) {
-	fmt.Println("ws lookupsrv");
+	ltndLog.Warnf("ws lookupsrv: %s %s %s", service, proto, name);
 	return "", []*net.SRV{}, nil
 }
 
 // ResolveTCPAddr does nothing for now
 func (w *WSNet) ResolveTCPAddr(network, address string) (*net.TCPAddr, error) {
-	fmt.Printf("ws resolvetcpaddr: %s %s\n", network, address);
+	ltndLog.Warnf("ws resolvetcpaddr: %s %s", network, address);
 	return nil, nil
 }
 
-// MCListener implements the net.Listener interface
+// MCListener implements the net.Listener interface and provides a context dialer for GRPC
 type MCListener struct {
 	onMessage js.Func
 	connect   chan js.Value
+	dial      chan net.Conn
 }
 
 func NewMCListener(mc js.Value) (*MCListener, error) {
-	m := &MCListener{connect: make(chan js.Value)}
+	m := &MCListener{connect: make(chan js.Value), dial: make(chan net.Conn)}
 	m.onMessage = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		go func() {
-			if len(args) > 1 {
-				m.connect <- args[1]
+			if len(args) > 0 {
+				ports := args[0].Get("ports")
+				if ports.Length() > 0 {
+					m.connect <- ports.Index(0)
+				}
 			}
 		}()
 		return nil
@@ -101,8 +105,12 @@ func NewMCListener(mc js.Value) (*MCListener, error) {
 }
 
 func (m *MCListener) Accept() (net.Conn, error) {
-	connection := <-m.connect
-	return newMcConn(connection)
+	select {
+	case connection := <-m.connect:
+		return newMcConn(connection)
+	case conn := <-m.dial:
+		return conn, nil
+	}
 }
 
 func (m *MCListener) Close() error {
@@ -112,6 +120,13 @@ func (m *MCListener) Close() error {
 
 func (m *MCListener) Addr() net.Addr {
 	return &net.TCPAddr{IP: net.IPv4(127,0,0,1), Port: 443}
+}
+
+// PipeDial implements a context dialer for GRPC proxy
+func (m *MCListener) PipeDial(ctx context.Context, addr string) (net.Conn, error) {
+	ourConn, theirConn := net.Pipe()
+	m.dial <- theirConn
+	return ourConn, nil
 }
 
 // mcConn implements the net.Conn interface
@@ -135,7 +150,8 @@ func newMcConn(mc js.Value) (net.Conn, error) {
 		go func() {
 			if len(args) > 0 {
 				val := args[0].Get("data")
-				buf := make([]byte, val.Length())
+				length := val.Length()
+				buf := make([]byte, length) 
 				js.CopyBytesToGo(buf, val)
 				c.ourConn.Write(buf)
 			}
@@ -150,11 +166,12 @@ func newMcConn(mc js.Value) (net.Conn, error) {
 func (c *mcConn) handler() {
 	buf := make([]byte, 1024 * 1024 * 200) // see lnd.go restDialOpts and cmd/lncli/main.go maxMsgRecvSize
 	for {
-		_, err := c.ourConn.Read(buf)
+		n, err := c.ourConn.Read(buf)
 		if err != nil { // connection closed, time to bail
 			return
 		}
-		b := uint8Array.New(len(buf))
+		b := uint8Array.New(n)
+		js.CopyBytesToJS(b, buf[:n])
 		c.mc.Call("postMessage", b)
 	}
 }
