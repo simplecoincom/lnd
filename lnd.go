@@ -1171,8 +1171,8 @@ func getTLSConfig(cfg *Config) ([]grpc.ServerOption, []grpc.DialOption,
 		tlsCfg.GetCertificate = getCertificate
 	}
 
-	serverCreds := credentials.NewTLS(tlsCfg)
-	serverOpts := []grpc.ServerOption{grpc.Creds(serverCreds)}
+	//serverCreds := credentials.NewTLS(tlsCfg)
+	serverOpts := []grpc.ServerOption{/*grpc.Creds(serverCreds)*/}
 
 	// For our REST dial options, we'll still use TLS, but also increase
 	// the max message size that we'll decode to allow clients to hit
@@ -1180,7 +1180,8 @@ func getTLSConfig(cfg *Config) ([]grpc.ServerOption, []grpc.DialOption,
 	// We set this to 200MiB atm. Should be the same value as maxMsgRecvSize
 	// in cmd/lncli/main.go.
 	restDialOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(restCreds),
+		//grpc.WithTransportCredentials(restCreds),
+		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallRecvMsgSize(1 * 1024 * 1024 * 200),
 		),
