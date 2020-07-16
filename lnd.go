@@ -288,15 +288,17 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	ltndLog.Infof("Database now open (time_to_open=%v)!", openTime)
 
 	// Only process macaroons if --no-macaroons isn't set.
-	tlsCfg, restCreds, restProxyDest, err := getTLSConfig(cfg)
+	// tlsCfg, restCreds, restProxyDest, err := getTLSConfig(cfg)
+	// No TLS in JS between rest and grpc as they're piped together
+	tlsCfg, _, restProxyDest, err := getTLSConfig(cfg)
 	if err != nil {
 		err := fmt.Errorf("unable to load TLS credentials: %v", err)
 		ltndLog.Error(err)
 		return err
 	}
 
-	serverCreds := credentials.NewTLS(tlsCfg)
-	serverOpts := []grpc.ServerOption{grpc.Creds(serverCreds)}
+	//serverCreds := credentials.NewTLS(tlsCfg)
+	serverOpts := []grpc.ServerOption{/*grpc.Creds(serverCreds)*/}
 
 	// For our REST dial options, we'll still use TLS, but also increase
 	// the max message size that we'll decode to allow clients to hit
@@ -304,7 +306,8 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// We set this to 200MiB atm. Should be the same value as maxMsgRecvSize
 	// in cmd/lncli/main.go.
 	restDialOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(*restCreds),
+		// grpc.WithTransportCredentials(*restCreds),
+		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallRecvMsgSize(1 * 1024 * 1024 * 200),
 		),
@@ -343,6 +346,14 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// this information.
 	walletInitParams.Birthday = time.Now()
 
+	// TODO(aakselrod): fix this scoping
+	mc := js.Global().Call("getLndPipe")
+	mcLis, err := NewMCListener(mc)
+	if err != nil {
+		ltndLog.Errorf("unable to listen on js message channel")
+	}
+	restDialOpts = append(restDialOpts, grpc.WithContextDialer(mcLis.PipeDial))
+
 	// getListeners is a closure that creates listeners from the
 	// RPCListeners defined in the config. It also returns a cleanup
 	// closure and the server options to use for the GRPC server.
@@ -364,14 +375,8 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 				})
 		}*/
 
-		// TODO(aakselrod): fix this scoping
-		mc := js.Global().Call("getLndPipe")
-		lis, err := NewMCListener(mc)
-		if err != nil {
-			ltndLog.Errorf("unable to listen on js message channel")
-		}
 		grpcListeners = append(grpcListeners, &ListenerWithSignal{
-			Listener: lis,
+			Listener: mcLis,
 			Ready:    make(chan struct{}),
 		})
 		cleanup := func() {
@@ -1055,7 +1060,7 @@ func waitForWalletPassword(cfg *Config, restEndpoints []net.Addr,
 			if err != nil {
 				ltndLog.Errorf("unable to listen on js message channel")
 			}
-			lis = tls.NewListener(lis, tlsConf)
+			// lis = tls.NewListener(lis, tlsConf) // Disable TLS over messagechannels for now
 		} else {
 			lis, err = lncfg.TLSListenOnAddress(restEndpoint, tlsConf)
 			if err != nil {
