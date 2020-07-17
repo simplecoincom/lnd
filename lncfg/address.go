@@ -57,7 +57,7 @@ func EnforceSafeAuthentication(addrs []net.Addr, macaroonsActive bool) error {
 	// on. If it's a localhost address, we'll skip it, otherwise, we'll
 	// return an error if macaroons are inactive.
 	for _, addr := range addrs {
-		if IsLoopback(addr.String()) || IsUnix(addr) {
+		if IsLoopback(addr.String()) || IsUnix(addr) || IsPipe(addr) {
 			continue
 		}
 
@@ -115,6 +115,15 @@ func IsLoopback(addr string) bool {
 // IsUnix returns true if an address describes an Unix socket address.
 func IsUnix(addr net.Addr) bool {
 	return strings.HasPrefix(addr.Network(), "unix")
+}
+
+// IsPipe returns true if an address describes a pipe-based address such as
+// a net.Pipe, potentially connected to a js MessageChannel.
+// TODO(aakselrod): update to consistent scheme
+func IsPipe(addr net.Addr) bool {
+	tcpAddr, ok := addr.(*net.TCPAddr)
+	isPipe := (!ok || tcpAddr == nil || tcpAddr.IP == nil)
+	return isPipe
 }
 
 // ParseAddressString converts an address in string format to a net.Addr that is
