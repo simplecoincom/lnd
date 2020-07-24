@@ -9,12 +9,14 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"net"
 	"net/http"
 	"runtime"
 	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall/js"
 	"time"
 
 	"github.com/btcsuite/btcd/blockchain"
@@ -845,11 +847,23 @@ func (r *rpcServer) Start() error {
 	// Now spin up a network listener for each requested port and start a
 	// goroutine that serves REST with the created mux there.
 	for _, restEndpoint := range r.cfg.RESTListeners {
-		lis, err := lncfg.TLSListenOnAddress(restEndpoint, r.tlsCfg)
-		if err != nil {
-			ltndLog.Errorf("gRPC proxy unable to listen on %s",
-				restEndpoint)
-			return err
+		var lis net.Listener
+		var err error
+		if lncfg.IsPipe(restEndpoint) {
+			// TODO(aakselrod): fix scoping/function call
+			mc := js.Global().Call("getRESTPipe")
+			lis, err = NewMCListener(mc)
+			if err != nil {
+				ltndLog.Errorf("unable to listen on js message channel")
+			}
+			// lis = tls.NewListener(lis, tlsConf) // Disable TLS over messagechannels for now
+		} else {
+			lis, err = lncfg.TLSListenOnAddress(restEndpoint, r.tlsCfg)
+			if err != nil {
+				ltndLog.Errorf("gRPC proxy unable to listen on %s",
+					restEndpoint)
+				return err
+			}
 		}
 
 		r.listenerCleanUp = append(r.listenerCleanUp, func() {
