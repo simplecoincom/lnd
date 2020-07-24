@@ -7,14 +7,19 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"syscall/js"
 
 	"nhooyr.io/websocket"
 )
 
-var hostIP uint32 = 127*(16777216)
+var (
+	hostIP uint32 = 127*(16777216)
 
-var uint8Array = js.Global().Get("Uint8Array")
+	uint8Array = js.Global().Get("Uint8Array")
+
+	ErrListenerClosed = fmt.Errorf("Listener has been closed")
+)
 
 // WSNet implements the tor.Net interface
 type WSNet struct {
@@ -80,56 +85,101 @@ func (w *WSNet) ResolveTCPAddr(network, address string) (*net.TCPAddr, error) {
 	return nil, nil
 }
 
-// MCListener implements the net.Listener interface and provides a context dialer for GRPC
+// MCListener implements the net.Listener interface backed by a JS MessageChannel that accepts other MessagePorts as connections
 type MCListener struct {
+	quit      sync.Once
 	onMessage js.Func
 	connect   chan js.Value
-	dial      chan net.Conn
+	done      chan struct{}
 }
 
 func NewMCListener(mc js.Value) (*MCListener, error) {
-	m := &MCListener{connect: make(chan js.Value), dial: make(chan net.Conn)}
-	m.onMessage = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	l := &MCListener{connect: make(chan js.Value), done: make(chan struct{})}
+	l.onMessage = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		go func() {
 			if len(args) > 0 {
 				ports := args[0].Get("ports")
 				if ports.Length() > 0 {
-					m.connect <- ports.Index(0)
+					l.connect <- ports.Index(0)
 				}
 			}
 		}()
 		return nil
 	})
-	mc.Set("onmessage", m.onMessage)
-	return m, nil
+	mc.Set("onmessage", l.onMessage)
+	return l, nil
 }
 
-func (m *MCListener) Accept() (net.Conn, error) {
+func (l *MCListener) Accept() (net.Conn, error) {
 	select {
-	case connection := <-m.connect:
+	case <-l.done:
+		return nil, ErrListenerClosed
+	case connection := <-l.connect:
 		return newMcConn(connection)
-	case conn := <-m.dial:
+	}
+}
+
+func (l *MCListener) Close() error {
+	l.onMessage.Release()
+	l.quit.Do(func() {
+		close(l.done)
+	})
+	return nil
+}
+
+func (l *MCListener) Addr() net.Addr {
+	return &net.TCPAddr{IP: net.IPv4(127,0,0,1), Port: 443}
+}
+
+// PipeListener implements the net.Listener interface and provides a context dialer for GRPC
+type PipeListener struct {
+	octx   context.Context
+	ctx    context.Context
+	cancel func()
+	dial   chan net.Conn
+}
+
+func NewPipeListener(ctx context.Context) (*PipeListener, error) {
+	l := &PipeListener{octx: ctx, dial: make(chan net.Conn)}
+	l.ctx, l.cancel = context.WithCancel(l.octx)
+	return l, nil
+}
+
+func (l *PipeListener) Accept() (net.Conn, error) {
+	select {
+	case <-l.ctx.Done():
+		return nil, ErrListenerClosed
+	case conn := <-l.dial:
 		return conn, nil
 	}
 }
 
-func (m *MCListener) Close() error {
-	m.onMessage.Release()
+func (l *PipeListener) Close() error {
+	l.cancel()
+	l.ctx, l.cancel = context.WithCancel(l.octx)
 	return nil
 }
 
-func (m *MCListener) Addr() net.Addr {
+func (l *PipeListener) Addr() net.Addr {
 	return &net.TCPAddr{IP: net.IPv4(127,0,0,1), Port: 443}
 }
 
-// PipeDial implements a context dialer for GRPC proxy
-func (m *MCListener) PipeDial(ctx context.Context, addr string) (net.Conn, error) {
+// Dial implements a context dialer for GRPC proxy
+func (l *PipeListener) Dial(ctx context.Context, addr string) (net.Conn, error) {
 	ourConn, theirConn := net.Pipe()
-	m.dial <- theirConn
-	return ourConn, nil
+	select {
+	case <- ctx.Done():
+		go func() {
+			ourConn.Close()
+			theirConn.Close()
+		}()
+		return nil, ErrListenerClosed
+	case l.dial <- theirConn:
+		return ourConn, nil
+	}
 }
 
-// mcConn implements the net.Conn interface
+// mcConn implements the net.Conn interface backed by a MessagePort passed over an MCListener
 type mcConn struct {
 	net.Conn
 
