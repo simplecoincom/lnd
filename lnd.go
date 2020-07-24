@@ -330,13 +330,11 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// this information.
 	walletInitParams.Birthday = time.Now()
 
-	// TODO(aakselrod): fix this scoping
-	mc := js.Global().Call("getLndPipe")
-	mcLis, err := NewMCListener(mc)
+	pipeLis, err := NewPipeListener(ctx)
 	if err != nil {
-		ltndLog.Errorf("unable to listen on js message channel")
+		ltndLog.Errorf("unable to listen on pipe")
 	}
-	restDialOpts = append(restDialOpts, grpc.WithContextDialer(mcLis.PipeDial))
+	restDialOpts = append(restDialOpts, grpc.WithContextDialer(pipeLis.Dial))
 
 	// getListeners is a closure that creates listeners from the
 	// RPCListeners defined in the config. It also returns a cleanup
@@ -360,7 +358,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 		}*/
 
 		grpcListeners = append(grpcListeners, &ListenerWithSignal{
-			Listener: mcLis,
+			Listener: pipeLis,
 			Ready:    make(chan struct{}),
 		})
 		cleanup := func() {
