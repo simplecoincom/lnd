@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall/js"
 	"time"
 
 	"github.com/btcsuite/btcd/blockchain"
