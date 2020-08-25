@@ -213,11 +213,16 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 	// Enable http profiling server if requested.
 	if cfg.Profile != "" {
 		go func() {
+			mc := js.Global().Call("getProfilePipe")
+			lis, err := NewMCListener(mc)
+			if err != nil {
+				panic(err)
+			}
 			profileRedirect := http.RedirectHandler("/debug/pprof",
 				http.StatusSeeOther)
 			http.Handle("/", profileRedirect)
 			ltndLog.Infof("Pprof listening on %v", cfg.Profile)
-			fmt.Println(http.ListenAndServe(cfg.Profile, nil))
+			fmt.Println(http.Serve(lis, nil))
 		}()
 	}
 
