@@ -225,11 +225,15 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// Enable http profiling server if requested.
 	if cfg.Profile != "" {
 		go func() {
-			listenAddr := net.JoinHostPort("", cfg.Profile)
+			mc := js.Global().Call("getProfilePipe")
+			lis, err := NewMCListener(mc)
+			if err != nil {
+				panic(err)
+			}
 			profileRedirect := http.RedirectHandler("/debug/pprof",
 				http.StatusSeeOther)
 			http.Handle("/", profileRedirect)
-			fmt.Println(http.ListenAndServe(listenAddr, nil))
+			fmt.Println(http.Serve(lis, nil))
 		}()
 	}
 
