@@ -932,6 +932,8 @@ func (r *rpcServer) Start() error {
 		go func() {
 			rpcsLog.Infof("gRPC proxy started at %s", lis.Addr())
 
+			js.Global().Call("RESTServerReady")
+
 			// Create our proxy chain now. A request will pass
 			// through the following chain:
 			// req ---> CORS handler --> WS proxy --->
