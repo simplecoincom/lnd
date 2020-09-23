@@ -908,7 +908,7 @@ func (r *rpcServer) Start() error {
 	for _, restEndpoint := range r.cfg.RESTListeners {
 		var lis net.Listener
 		var err error
-		if lncfg.IsPipe(restEndpoint) {
+		if lncfg.IsPipe(restEndpoint) || runtime.GOOS == "js" {
 			// TODO(aakselrod): fix scoping/function call
 			mc := js.Global().Call("getRESTPipe")
 			lis, err = NewMCListener(mc)
