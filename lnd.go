@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"runtime/pprof"
 	"strings"
 	"sync"
@@ -1055,7 +1056,7 @@ func waitForWalletPassword(cfg *Config, restEndpoints []net.Addr,
 	for _, restEndpoint := range restEndpoints {
 		var lis net.Listener
 		var err error
-		if lncfg.IsPipe(restEndpoint) {
+		if lncfg.IsPipe(restEndpoint) || runtime.GOOS == "js" {
 			// TODO(aakselrod): fix scoping/function call
 			mc := js.Global().Call("getRESTPipe")
 			lis, err = NewMCListener(mc)
