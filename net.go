@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall/js"
@@ -58,7 +59,8 @@ func (w *WSNet) Dial(network, address string) (net.Conn, error) {
 	return websocket.NetConn(w.ctx, ws, websocket.MessageBinary), nil
 }
 
-// LookupHost does nothing for now
+// LookupHost maps a looked up host to a temporary IP so we can get back what we looked up
+// and pass it directly to the websocket implementation at dial time
 func (w *WSNet) LookupHost(host string) ([]string, error) {
 	hostIP++
 	octet4 := hostIP
@@ -79,10 +81,25 @@ func (w *WSNet) LookupSRV(service, proto, name string) (string, []*net.SRV, erro
 	return "", []*net.SRV{}, nil
 }
 
-// ResolveTCPAddr does nothing for now
+// ResolveTCPAddr uses LookupHost to map a host to a temporary IP
 func (w *WSNet) ResolveTCPAddr(network, address string) (*net.TCPAddr, error) {
 	ltndLog.Warnf("ws resolvetcpaddr: %s %s", network, address);
-	return nil, nil
+	host, strPort, err := net.SplitHostPort(address)
+	if err != nil {
+		return nil, err
+	}
+
+	ip, err := w.LookupHost(host)
+	if err != nil {
+		return nil, err
+	}
+
+	port, err := strconv.Atoi(strPort)
+	if err != nil {
+		return nil, err
+	}
+
+	return &net.TCPAddr{IP: net.ParseIP(ip[0]), Port: port}, nil
 }
 
 // MCListener implements the net.Listener interface backed by a JS MessageChannel that accepts other MessagePorts as connections

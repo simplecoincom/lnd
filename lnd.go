@@ -15,6 +15,7 @@ import (
 	_ "net/http/pprof" // Blank import to set up profiling HTTP handlers.
 	"os"
 	"path/filepath"
+	"runtime"
 	"runtime/pprof"
 	"strconv"
 	"strings"
