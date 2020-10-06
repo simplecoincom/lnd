@@ -7,7 +7,7 @@ import (
 var (
 	// metaBucket stores all the meta information concerning the state of
 	// the database.
-	metaBucket = []byte("cdb-meta")
+	metaBucket = []byte("metadata")
 
 	// dbVersionKey is a boltdb key and it's used for storing/retrieving
 	// current database version.
