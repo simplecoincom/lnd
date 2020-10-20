@@ -217,10 +217,15 @@ func newMcConn(mc js.Value) (net.Conn, error) {
 		go func() {
 			if len(args) > 0 {
 				val := args[0].Get("data")
-				length := val.Length()
-				buf := make([]byte, length) 
-				js.CopyBytesToGo(buf, val)
-				c.ourConn.Write(buf)
+				switch val.Type() {
+				case js.TypeObject:
+					length := val.Length()
+					buf := make([]byte, length) 
+					js.CopyBytesToGo(buf, val)
+					c.ourConn.Write(buf)
+				case js.TypeBoolean:
+					c.Close()
+				}
 			}
 		}()
 		return nil
