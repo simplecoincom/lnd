@@ -8,6 +8,7 @@ import (
 	"net"
 
 	"github.com/lightningnetwork/lnd/tor"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // addressType specifies the network protocol and version that should be used
@@ -26,6 +27,9 @@ const (
 
 	// v3OnionAddr denotes a version 3 Tor (prop224) onion service address.
 	v3OnionAddr addressType = 3
+
+	// wsAddr denotes a websocket (string) address.
+	wsAddr addressType = 4
 )
 
 // encodeTCPAddr serializes a TCP address into its compact raw bytes
@@ -121,6 +125,36 @@ func encodeOnionAddr(w io.Writer, addr *tor.OnionAddr) error {
 	return nil
 }
 
+// encodeWSAddr encodes an address that can be passed to a browser's websocket api
+func encodeWSAddr(w io.Writer, addr *tor.WSAddr) error {
+	if _, err := w.Write([]byte{byte(wsAddr)}); err != nil {
+		return err
+	}
+
+	switch addr.Network() {
+	case "ws":
+		if _, err := w.Write([]byte("w")); err != nil {
+			return err
+		}
+	case "wss":
+		if _, err := w.Write([]byte("s")); err != nil {
+			return err
+		}
+	}
+
+	var l [2]byte
+	byteOrder.PutUint16(l[:], uint16(len(addr.String())))
+	if _, err := w.Write(l[:]); err != nil {
+		return err
+	}
+
+	if _, err := w.Write([]byte(addr.String())); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // deserializeAddr reads the serialized raw representation of an address and
 // deserializes it into the actual address. This allows us to avoid address
 // resolution within the channeldb package.
@@ -200,6 +234,32 @@ func deserializeAddr(r io.Reader) (net.Addr, error) {
 			OnionService: onionService,
 			Port:         port,
 		}
+	case wsAddr:
+		var n [1]byte
+		if _, err := r.Read(n[:]); err != nil {
+			return nil, err
+		}
+
+		var network string
+		switch string(n[:]) {
+		case "w":
+			network = "ws"
+		case "s":
+			network = "wss"
+		}
+
+		var l [2]byte
+		if _, err := r.Read(l[:]); err != nil {
+			return nil, err
+		}
+		length := int(byteOrder.Uint16(l[:]))
+
+		a := make([]byte, length)
+		if _, err := r.Read(a[:]); err != nil {
+			return nil, err
+		}
+
+		address = tor.NewWSAddr(network,string(a))
 	default:
 		return nil, ErrUnknownAddressType
 	}
@@ -210,11 +270,14 @@ func deserializeAddr(r io.Reader) (net.Addr, error) {
 // serializeAddr serializes an address into its raw bytes representation so that
 // it can be deserialized without requiring address resolution.
 func serializeAddr(w io.Writer, address net.Addr) error {
+	fmt.Println(spew.Sdump(address))
 	switch addr := address.(type) {
 	case *net.TCPAddr:
 		return encodeTCPAddr(w, addr)
 	case *tor.OnionAddr:
 		return encodeOnionAddr(w, addr)
+	case *tor.WSAddr:
+		return encodeWSAddr(w, addr)
 	default:
 		return ErrUnknownAddressType
 	}

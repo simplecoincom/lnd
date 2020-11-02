@@ -215,7 +215,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 	if cfg.Profile != "" {
 		go func() {
 			mc := js.Global().Call("getProfilePipe")
-			lis, err := NewMCListener(mc)
+			lis, err := tor.NewMCListener(mc)
 			if err != nil {
 				panic(err)
 			}
