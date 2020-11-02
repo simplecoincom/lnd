@@ -235,7 +235,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	if cfg.Profile != "" {
 		go func() {
 			mc := js.Global().Call("getProfilePipe")
-			lis, err := NewMCListener(mc)
+			lis, err := tor.NewMCListener(mc)
 			if err != nil {
 				panic(err)
 			}
@@ -335,7 +335,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 	// this information.
 	walletInitParams.Birthday = time.Now()
 
-	pipeLis, err := NewPipeListener(ctx)
+	pipeLis, err := tor.NewPipeListener(ctx)
 	if err != nil {
 		ltndLog.Errorf("unable to listen on pipe")
 	}
@@ -1231,7 +1231,7 @@ func waitForWalletPassword(cfg *Config, restEndpoints []net.Addr,
 		if lncfg.IsPipe(restEndpoint) || runtime.GOOS == "js" {
 			// TODO(aakselrod): fix scoping/function call
 			mc := js.Global().Call("getRESTPipe")
-			lis, err = NewMCListener(mc)
+			lis, err = tor.NewMCListener(mc)
 			if err != nil {
 				ltndLog.Errorf("unable to listen on js message channel")
 			}

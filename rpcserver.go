@@ -70,6 +70,7 @@ import (
 	"github.com/lightningnetwork/lnd/routing/route"
 	"github.com/lightningnetwork/lnd/signal"
 	"github.com/lightningnetwork/lnd/sweep"
+	"github.com/lightningnetwork/lnd/tor"
 	"github.com/lightningnetwork/lnd/watchtower"
 	"github.com/lightningnetwork/lnd/zpay32"
 	"github.com/tv42/zbase32"
@@ -911,7 +912,7 @@ func (r *rpcServer) Start() error {
 		if lncfg.IsPipe(restEndpoint) || runtime.GOOS == "js" {
 			// TODO(aakselrod): fix scoping/function call
 			mc := js.Global().Call("getRESTPipe")
-			lis, err = NewMCListener(mc)
+			lis, err = tor.NewMCListener(mc)
 			if err != nil {
 				ltndLog.Errorf("unable to listen on js message channel")
 			}

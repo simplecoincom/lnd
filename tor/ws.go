@@ -1,6 +1,6 @@
 // ----build !js
 
-package lnd
+package tor
 
 import (
 	"context"
@@ -21,6 +21,37 @@ var (
 
 	ErrListenerClosed = fmt.Errorf("Listener has been closed")
 )
+
+// WSConn implements the net.Conn interface and wraps websocket.NetConn
+type WSConn struct {
+	net.Conn
+	addr *WSAddr
+}
+
+// RemoteAddr is the only thing WSConn overrides
+func (c *WSConn) RemoteAddr() net.Addr {
+	return c.addr
+}
+
+// WSAddr implements the net.Addr interface
+type WSAddr struct {
+	net  string
+	addr string
+}
+
+// Network returns the network, "ws" or "wss"
+func (a WSAddr) Network() string {
+	return a.net
+}
+
+// String returns the address as passed to Dial
+func (a WSAddr) String() string {
+	return a.addr
+}
+
+func NewWSAddr(net, addr string) *WSAddr {
+	return &WSAddr{net, addr}
+}
 
 // WSNet implements the tor.Net interface
 type WSNet struct {
@@ -56,7 +87,13 @@ func (w *WSNet) Dial(network, address string) (net.Conn, error) {
 		return nil, err
 	}
 	ws.SetReadLimit(4500000)
-	return websocket.NetConn(w.ctx, ws, websocket.MessageBinary), nil
+	return &WSConn {
+		websocket.NetConn(w.ctx, ws, websocket.MessageBinary),
+		&WSAddr{
+			net:  network,
+			addr: wsDial,
+		},
+	},nil
 }
 
 // LookupHost maps a looked up host to a temporary IP so we can get back what we looked up
@@ -77,13 +114,11 @@ func (w *WSNet) LookupHost(host string) ([]string, error) {
 
 // LookupSRV does nothing for now
 func (w *WSNet) LookupSRV(service, proto, name string) (string, []*net.SRV, error) {
-	ltndLog.Warnf("ws lookupsrv: %s %s %s", service, proto, name);
 	return "", []*net.SRV{}, nil
 }
 
 // ResolveTCPAddr uses LookupHost to map a host to a temporary IP
 func (w *WSNet) ResolveTCPAddr(network, address string) (*net.TCPAddr, error) {
-	ltndLog.Warnf("ws resolvetcpaddr: %s %s", network, address);
 	host, strPort, err := net.SplitHostPort(address)
 	if err != nil {
 		return nil, err
@@ -236,7 +271,7 @@ func newMcConn(mc js.Value) (net.Conn, error) {
 }
 
 func (c *mcConn) handler() {
-	buf := make([]byte, 1024 * 1024 * 200) // see lnd.go restDialOpts and cmd/lncli/main.go maxMsgRecvSize
+	buf := make([]byte, 1024 * 1024 /** 200*/) // see lnd.go restDialOpts and cmd/lncli/main.go maxMsgRecvSize
 	for {
 		n, err := c.ourConn.Read(buf)
 		if err != nil { // connection closed, time to bail
