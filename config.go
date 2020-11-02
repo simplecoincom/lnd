@@ -349,7 +349,7 @@ func DefaultConfig() Config {
 			DNS:     defaultTorDNS,
 			Control: defaultTorControl,
 		},
-		net: NewWSNet(),
+		net: tor.NewWSNet(),
 		Workers: &lncfg.Workers{
 			Read:  lncfg.DefaultReadWorkers,
 			Write: lncfg.DefaultWriteWorkers,
