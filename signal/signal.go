@@ -6,8 +6,8 @@
 package signal
 
 import (
-	"errors"
 	"os"
+	"sync/atomic"
 )
 
 var (

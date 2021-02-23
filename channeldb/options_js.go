@@ -1,4 +1,4 @@
-// +build !js !wasm
+// +build js wasm
 
 package channeldb
 
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/lightningnetwork/lnd/clock"
-	"github.com/lightningnetwork/lnd/kvdb"
 )
 
 const (
@@ -23,8 +22,6 @@ const (
 
 // Options holds parameters for tuning and customizing a channeldb.DB.
 type Options struct {
-	kvdb.BoltBackendConfig
-
 	// RejectCacheSize is the maximum number of rejectCacheEntries to hold
 	// in the rejection cache.
 	RejectCacheSize int
@@ -48,12 +45,6 @@ type Options struct {
 // DefaultOptions returns an Options populated with default values.
 func DefaultOptions() Options {
 	return Options{
-		BoltBackendConfig: kvdb.BoltBackendConfig{
-			NoFreelistSync:    true,
-			AutoCompact:       false,
-			AutoCompactMinAge: kvdb.DefaultBoltAutoCompactMinAge,
-			DBTimeout:         kvdb.DefaultDBTimeout,
-		},
 		RejectCacheSize:  DefaultRejectCacheSize,
 		ChannelCacheSize: DefaultChannelCacheSize,
 		clock:            clock.NewDefaultClock(),
@@ -80,14 +71,12 @@ func OptionSetChannelCacheSize(n int) OptionModifier {
 // OptionSetSyncFreelist allows the database to sync its freelist.
 func OptionSetSyncFreelist(b bool) OptionModifier {
 	return func(o *Options) {
-		o.NoFreelistSync = !b
 	}
 }
 
 // OptionAutoCompact turns on automatic database compaction on startup.
 func OptionAutoCompact() OptionModifier {
 	return func(o *Options) {
-		o.AutoCompact = true
 	}
 }
 
@@ -95,7 +84,6 @@ func OptionAutoCompact() OptionModifier {
 // compaction.
 func OptionAutoCompactMinAge(minAge time.Duration) OptionModifier {
 	return func(o *Options) {
-		o.AutoCompactMinAge = minAge
 	}
 }
 

@@ -6,6 +6,7 @@
 package signal
 
 import (
+	"errors"
 	"os"
 	"os/signal"
 	"sync/atomic"

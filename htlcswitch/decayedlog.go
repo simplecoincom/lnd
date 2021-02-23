@@ -51,7 +51,11 @@ type DecayedLog struct {
 	started int32 // To be used atomically.
 	stopped int32 // To be used atomically.
 
-	cfg *kvdb.BoltBackendConfig
+	// no bolt in js - cfg *kvdb.BoltBackendConfig
+
+	dbPath string
+
+	dbFileName string
 
 	db kvdb.Backend
 
@@ -64,27 +68,29 @@ type DecayedLog struct {
 // NewDecayedLog creates a new DecayedLog, which caches recently seen hash
 // shared secrets. Entries are evicted as their cltv expires using block epochs
 // from the given notifier.
-func NewDecayedLog(dbPath, dbFileName string, boltCfg *kvdb.BoltConfig,
+func NewDecayedLog(dbPath, dbFileName string, // no bolt in js - boltCfg *kvdb.BoltConfig,
 	notifier chainntnfs.ChainNotifier) *DecayedLog {
 
-	cfg := &kvdb.BoltBackendConfig{
+	/* cfg := &kvdb.BoltBackendConfig{
 		DBPath:            dbPath,
 		DBFileName:        dbFileName,
 		NoFreelistSync:    true,
 		AutoCompact:       boltCfg.AutoCompact,
 		AutoCompactMinAge: boltCfg.AutoCompactMinAge,
 		DBTimeout:         boltCfg.DBTimeout,
-	}
+	}*/
 
 	// Use default path for log database
 	if dbPath == "" {
-		cfg.DBPath = defaultDbDirectory
+		dbPath = defaultDbDirectory
 	}
 
 	return &DecayedLog{
-		cfg:      cfg,
-		notifier: notifier,
-		quit:     make(chan struct{}),
+		// cfg:      cfg,
+		dbPath:     dbPath,
+		dbFileName: dbFileName,
+		notifier:   notifier,
+		quit:       make(chan struct{}),
 	}
 }
 
@@ -98,7 +104,7 @@ func (d *DecayedLog) Start() error {
 
 	// Open the ldb for use.
 	var err error
-	d.db, err = kvdb.GetLdbBackend(d.cfg)
+	d.db, err = kvdb.GetLdbBackend(d.dbPath, d.dbFileName)
 	if err != nil {
 		return fmt.Errorf("could not open ldb: %v", err)
 	}

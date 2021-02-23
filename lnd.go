@@ -43,6 +43,7 @@ import (
 	"github.com/lightningnetwork/lnd/chainreg"
 	"github.com/lightningnetwork/lnd/chanacceptor"
 	"github.com/lightningnetwork/lnd/channeldb"
+	"github.com/lightningnetwork/lnd/channeldb/kvdb"
 	"github.com/lightningnetwork/lnd/keychain"
 	"github.com/lightningnetwork/lnd/lncfg"
 	"github.com/lightningnetwork/lnd/lnrpc"
@@ -1115,10 +1116,10 @@ func getTLSConfig(cfg *Config) ([]grpc.ServerOption, []grpc.DialOption,
 
 	tlsCfg := cert.TLSConfFromCert(certData)
 
-	restCreds, err := credentials.NewClientTLSFromFile(cfg.TLSCertPath, "")
+	/*restCreds, err := credentials.NewClientTLSFromFile(cfg.TLSCertPath, "")
 	if err != nil {
 		return nil, nil, nil, nil, err
-	}
+	}*/
 
 	// If Let's Encrypt is enabled, instantiate autocert to request/renew
 	// the certificates.
@@ -1785,7 +1786,7 @@ func initNeutrinoBackend(cfg *Config, chainDir string,
 
 	dbName := filepath.Join(dbPath, "neutrino.db")
 	db, err := walletdb.Create(
-		"bdb", dbName, !cfg.SyncFreelist, cfg.DB.Bolt.DBTimeout,
+		"ldb", dbName, !cfg.SyncFreelist, kvdb.DefaultDBTimeout,
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create neutrino "+

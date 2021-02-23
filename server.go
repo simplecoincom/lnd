@@ -387,7 +387,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 	// the same directory as the channel graph database. We don't need to
 	// replicate this data, so we'll store it locally.
 	replayLog := htlcswitch.NewDecayedLog(
-		cfg.localDatabaseDir(), defaultSphinxDbName, cfg.DB.Bolt,
+		cfg.localDatabaseDir(), defaultSphinxDbName, // no bolt in js - cfg.DB.Bolt,
 		cc.ChainNotifier,
 	)
 	sphinxRouter := sphinx.NewRouter(
@@ -1367,6 +1367,8 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 		cfg.HealthChecks.ChainCheck.Attempts,
 	)
 
+	// disable for js
+	/*
 	diskCheck := healthcheck.NewObservation(
 		"disk space",
 		func() error {
@@ -1391,7 +1393,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 		cfg.HealthChecks.DiskCheck.Timeout,
 		cfg.HealthChecks.DiskCheck.Backoff,
 		cfg.HealthChecks.DiskCheck.Attempts,
-	)
+	)*/
 
 	tlsHealthCheck := healthcheck.NewObservation(
 		"tls",
@@ -1424,7 +1426,7 @@ func newServer(cfg *Config, listenAddrs []net.Addr,
 	s.livelinessMonitor = healthcheck.NewMonitor(
 		&healthcheck.Config{
 			Checks: []*healthcheck.Observation{
-				chainHealthCheck, diskCheck, tlsHealthCheck,
+				chainHealthCheck, /*diskCheck,*/ tlsHealthCheck,
 			},
 			Shutdown: srvrLog.Criticalf,
 		},
