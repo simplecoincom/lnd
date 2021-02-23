@@ -1225,7 +1225,7 @@ func waitForWalletPassword(cfg *Config, restEndpoints []net.Addr,
 	for _, restEndpoint := range restEndpoints {
 		var lis net.Listener
 		var err error
-		if addr, ok := restEndpoint.(*net.TCPAddr); !ok || addr == nil || addr.IP == nil {
+		if lncfg.IsPipe(restEndpoint) {
 			// TODO(aakselrod): fix scoping/function call
 			mc := js.Global().Call("getRESTPipe")
 			lis, err = NewMCListener(mc)
