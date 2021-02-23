@@ -3,7 +3,6 @@ package kvdb
 import (
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
