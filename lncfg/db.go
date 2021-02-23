@@ -32,7 +32,7 @@ type DB struct {
 // NewDB creates and returns a new default DB config.
 func DefaultDB() *DB {
 	return &DB{
-		Backend: ldbBackend,
+		Backend: LdbBackend,
 		LevelDB: &kvdb.LdbConfig{
 		},
 	}
@@ -43,7 +43,7 @@ func (db *DB) Validate() error {
 	switch db.Backend {
 	case BoltBackend:
 
-	case ldbBackend:
+	case LdbBackend:
 
 	case EtcdBackend:
 		if !db.Etcd.Embedded && db.Etcd.Host == "" {

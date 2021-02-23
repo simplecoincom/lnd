@@ -6,10 +6,12 @@ import (
 	"context"
 	"fmt"
 	"net"
+	//"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"syscall/js"
+	"time"
 
 	"nhooyr.io/websocket"
 )
@@ -67,7 +69,7 @@ func NewWSNet() *WSNet {
 }
 
 // Dial connects to the address on the named network.
-func (w *WSNet) Dial(network, address string) (net.Conn, error) {
+func (w *WSNet) Dial(network, address string, timeout time.Duration) (net.Conn, error) {
 	addrParts := strings.Split(address, ":")
 	if len(addrParts) > 1 {
 		switch addrParts[1] {
@@ -82,7 +84,11 @@ func (w *WSNet) Dial(network, address string) (net.Conn, error) {
 		network = "ws"
 	}
 	wsDial := fmt.Sprintf("%s://%s:%s", network, w.lookupHostMap[addrParts[0]], addrParts[1])
-	ws, _, err :=  websocket.Dial(w.ctx, wsDial, &websocket.DialOptions{})
+	opts := websocket.DialOptions{}
+	// ignore timeout for now
+	//opts.HTTPClient = http.DefaultClient
+	//opts.HTTPClient.Timeout = timeout
+	ws, _, err :=  websocket.Dial(w.ctx, wsDial, &opts)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +119,7 @@ func (w *WSNet) LookupHost(host string) ([]string, error) {
 }
 
 // LookupSRV does nothing for now
-func (w *WSNet) LookupSRV(service, proto, name string) (string, []*net.SRV, error) {
+func (w *WSNet) LookupSRV(service, proto, name string, timeout time.Duration) (string, []*net.SRV, error) {
 	return "", []*net.SRV{}, nil
 }
 

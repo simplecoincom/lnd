@@ -920,7 +920,7 @@ func (r *rpcServer) Start() error {
 			}
 			// lis = tls.NewListener(lis, tlsConf) // Disable TLS over messagechannels for now
 		} else {
-			lis, err := r.restListen(restEndpoint)
+			lis, err = r.restListen(restEndpoint)
 			if err != nil {
 				ltndLog.Errorf("gRPC proxy unable to listen on %s",
 					restEndpoint)
