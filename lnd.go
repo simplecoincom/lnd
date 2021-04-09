@@ -1519,6 +1519,8 @@ func startRestProxy(cfg *Config, rpcServer *rpcServer, restDialOpts []grpc.DialO
 
 	// Wait for REST servers to be up running.
 	wg.Wait()
+	rpcsLog.Infof("Password gRPC proxy started at %s", lis.Addr())
+	js.Global().Call("WalletUnlockerReady")
 
 	return shutdown, nil
 }
