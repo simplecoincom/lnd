@@ -1259,6 +1259,7 @@ func waitForWalletPassword(cfg *Config, restEndpoints []net.Addr,
 		go func() {
 			rpcsLog.Infof("Password gRPC proxy started at %s",
 				lis.Addr())
+			js.Global().Call("WalletUnlockerReady")
 			wg.Done()
 			_ = srv.Serve(lis)
 		}()
