@@ -53,6 +53,9 @@ const (
 
 	// v3OnionAddr denotes a version 3 Tor (prop224) onion service address.
 	v3OnionAddr addressType = 4
+
+	// wsAddr denotes a ws:// or wss:// websocket address.
+	wsAddr addressType = 5
 )
 
 // AddrLen returns the number of bytes that it takes to encode the target
@@ -374,6 +377,32 @@ func WriteElement(w io.Writer, element interface{}) error {
 		var port [2]byte
 		binary.BigEndian.PutUint16(port[:], uint16(e.Port))
 		if _, err := w.Write(port[:]); err != nil {
+			return err
+		}
+
+	case *tor.WSAddr:
+		if _, err := w.Write([]byte{byte(wsAddr)}); err != nil {
+			return err
+		}
+
+		switch e.Network() {
+		case "ws":
+			if _, err := w.Write([]byte("w")); err != nil {
+				return err
+			}
+		case "wss":
+			if _, err := w.Write([]byte("s")); err != nil {
+				return err
+			}
+		}
+
+		var l [2]byte
+		binary.BigEndian.PutUint16(l[:], uint16(len(e.String())))
+		if _, err := w.Write(l[:]); err != nil {
+			return err
+		}
+
+		if _, err := w.Write([]byte(e.String())); err != nil {
 			return err
 		}
 
@@ -802,6 +831,36 @@ func ReadElement(r io.Reader, element interface{}) error {
 					Port:         port,
 				}
 				addrBytesRead += aType.AddrLen()
+
+			case wsAddr:
+				var n [1]byte
+				if _, err := io.ReadFull(addrBuf, n[:]); err != nil {
+					return err
+				}
+				addrBytesRead++
+
+				var network string
+				switch string(n[:]) {
+				case "w":
+					network = "ws"
+				case "s":
+					network = "wss"
+				}
+
+				var l [2]byte
+				if _, err := io.ReadFull(addrBuf, l[:]); err != nil {
+					return err
+				}
+				addrBytesRead += 2
+				length := int(binary.BigEndian.Uint16(l[:]))
+
+				a := make([]byte, length)
+				if _, err := io.ReadFull(addrBuf, a[:]); err != nil {
+					return err
+				}
+				addrBytesRead += uint16(length)
+
+				address = tor.NewWSAddr(network,string(a))
 
 			default:
 				return &ErrUnknownAddrType{aType}

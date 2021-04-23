@@ -8,7 +8,6 @@ import (
 	"net"
 
 	"github.com/lightningnetwork/lnd/tor"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // addressType specifies the network protocol and version that should be used
@@ -29,7 +28,7 @@ const (
 	v3OnionAddr addressType = 3
 
 	// wsAddr denotes a websocket (string) address.
-	wsAddr addressType = 4
+	wsAddr addressType = 5
 )
 
 // encodeTCPAddr serializes a TCP address into its compact raw bytes
@@ -270,7 +269,6 @@ func deserializeAddr(r io.Reader) (net.Addr, error) {
 // serializeAddr serializes an address into its raw bytes representation so that
 // it can be deserialized without requiring address resolution.
 func serializeAddr(w io.Writer, address net.Addr) error {
-	fmt.Println(spew.Sdump(address))
 	switch addr := address.(type) {
 	case *net.TCPAddr:
 		return encodeTCPAddr(w, addr)
