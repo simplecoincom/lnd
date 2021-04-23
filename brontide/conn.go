@@ -38,9 +38,10 @@ func Dial(local keychain.SingleKeyECDH, netAddr *lnwire.NetAddress,
 	timeout time.Duration, dialer tor.DialFunc) (*Conn, error) {
 
 	ipAddr := netAddr.Address.String()
+	ipNet := netAddr.Address.Network()
 	var conn net.Conn
 	var err error
-	conn, err = dialer("tcp", ipAddr, timeout)
+	conn, err = dialer(ipNet, ipAddr, timeout)
 	if err != nil {
 		return nil, err
 	}

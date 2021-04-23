@@ -71,8 +71,10 @@ func NewWSNet() *WSNet {
 // Dial connects to the address on the named network.
 func (w *WSNet) Dial(network, address string, timeout time.Duration) (net.Conn, error) {
 	addrParts := strings.Split(address, ":")
-	if len(addrParts) > 1 {
-		switch addrParts[1] {
+	lenParts := len(addrParts)
+	if lenParts > 1 {
+		addrParts[lenParts-1] = strings.Trim(addrParts[lenParts-1], "/")
+		switch addrParts[lenParts-1] {
 		case "443":
 			network = "wss"
 		case "80":
@@ -81,9 +83,16 @@ func (w *WSNet) Dial(network, address string, timeout time.Duration) (net.Conn, 
 		}
 	} else {
 		addrParts = append(addrParts, "80")
+		lenParts++
 		network = "ws"
 	}
-	wsDial := fmt.Sprintf("%s://%s:%s", network, w.lookupHostMap[addrParts[0]], addrParts[1])
+	addrParts[lenParts-2] = strings.Trim(addrParts[lenParts-2], "/")
+	host, ok := w.lookupHostMap[addrParts[lenParts-2]]
+	if !ok {
+		host = addrParts[lenParts-2]
+	}
+	wsAddr := fmt.Sprintf("%s:%s", host, addrParts[lenParts-1])
+	wsDial := fmt.Sprintf("%s://%s", network, wsAddr)
 	opts := websocket.DialOptions{}
 	// ignore timeout for now
 	//opts.HTTPClient = http.DefaultClient
@@ -97,7 +106,7 @@ func (w *WSNet) Dial(network, address string, timeout time.Duration) (net.Conn, 
 		websocket.NetConn(w.ctx, ws, websocket.MessageBinary),
 		&WSAddr{
 			net:  network,
-			addr: wsDial,
+			addr: wsAddr,
 		},
 	},nil
 }
