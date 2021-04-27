@@ -261,6 +261,12 @@ func Main(cfg *Config, lisCfg ListenerCfg, shutdownChan <-chan struct{}) error {
 		defer pprof.StopCPUProfile()
 	}
 
+	// Register a global function to kill the process fast if needed
+	js.Global().Set("wasmKill", js.FuncOf(func(this js.Value, args []js.Value) interface {} {
+		os.Exit(1)
+		return nil
+	}))
+
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
