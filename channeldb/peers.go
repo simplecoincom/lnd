@@ -91,6 +91,10 @@ func (d *DB) ReadFlapCount(pubkey route.Vertex) (*FlapCount, error) {
 	if err := kvdb.View(d, func(tx kvdb.RTx) error {
 		peers := tx.ReadBucket(peersBucket)
 
+		if peers == nil {
+			return ErrNoPeerBucket
+		}
+
 		peerBucket := peers.NestedReadBucket(pubkey[:])
 		if peerBucket == nil {
 			return ErrNoPeerBucket
