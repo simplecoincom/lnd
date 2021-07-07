@@ -15,7 +15,6 @@ import (
 	_ "net/http/pprof" // Blank import to set up profiling HTTP handlers.
 	"os"
 	"path/filepath"
-	"runtime"
 	"runtime/pprof"
 	"strconv"
 	"strings"
@@ -43,8 +42,8 @@ import (
 	"github.com/lightningnetwork/lnd/chainreg"
 	"github.com/lightningnetwork/lnd/chanacceptor"
 	"github.com/lightningnetwork/lnd/channeldb"
-	"github.com/lightningnetwork/lnd/channeldb/kvdb"
 	"github.com/lightningnetwork/lnd/keychain"
+	"github.com/lightningnetwork/lnd/kvdb"
 	"github.com/lightningnetwork/lnd/lncfg"
 	"github.com/lightningnetwork/lnd/lnrpc"
 	"github.com/lightningnetwork/lnd/lnwallet"
@@ -338,7 +337,7 @@ func Main(cfg *Config, lisCfg ListenerCfg, interceptor signal.Interceptor) error
 
 	// TODO(aakselrod): fix this scoping
 	mc := js.Global().Call("getLndPipe")
-	lis, err := NewMCListener(mc)
+	lis, err := tor.NewMCListener(mc)
 	if err != nil {
 		ltndLog.Errorf("unable to listen on js message channel")
 	}
@@ -1205,16 +1204,18 @@ func getTLSConfig(cfg *Config) ([]grpc.ServerOption, []grpc.DialOption,
 	restListen := func(addr net.Addr) (net.Listener, error) {
 		// Handle MessageChannel-based endpoints
 		if tcpAddr, ok := addr.(*net.TCPAddr); !ok || tcpAddr == nil || tcpAddr.IP == nil {
+			var lis net.Listener
+			var err error
 			// TODO(aakselrod): fix scoping/function call
 			mc := js.Global().Call("getRESTPipe")
-			lis, err := NewMCListener(mc)
+			lis, err = tor.NewMCListener(mc)
 			if err != nil {
 				ltndLog.Errorf("unable to listen on js message channel")
 				return nil, err
 			}
 			// Enable TLS if not disabled in config
 			if !cfg.DisableRestTLS {
-				lis = tls.NewListener(lis, tlsConf)
+				lis = tls.NewListener(lis, tlsCfg)
 			}
 			return lis, nil
 		}
@@ -1525,7 +1526,6 @@ func startRestProxy(cfg *Config, rpcServer *rpcServer, restDialOpts []grpc.DialO
 
 	// Wait for REST servers to be up running.
 	wg.Wait()
-	rpcsLog.Infof("Password gRPC proxy started at %s", lis.Addr())
 	js.Global().Call("WalletUnlockerReady")
 
 	return shutdown, nil

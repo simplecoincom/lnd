@@ -75,7 +75,7 @@ func (c *Interceptor) mainInterruptHandler() {
 		case <-c.quit:
 			log.Infof("Gracefully shutting down.")
 			close(c.shutdownChannel)
-			signal.Stop(c.interruptChannel)
+			//signal.Stop(c.interruptChannel)
 			return
 		}
 	}
